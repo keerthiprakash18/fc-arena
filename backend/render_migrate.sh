@@ -18,3 +18,16 @@ fi
 export DEBUG=0
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput --clear
+
+# Create default superuser if none exists
+python -c "
+import os, django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+django.setup()
+from django.contrib.auth.models import User
+if not User.objects.filter(is_superuser=True).exists():
+    User.objects.create_superuser('admin', 'admin@fcarena.com', 'Admin@123')
+    print('Created superuser: admin / Admin@123')
+else:
+    print('Superuser already exists')
+"
