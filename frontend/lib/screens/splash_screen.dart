@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../main.dart';
+import 'login_screen.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -31,26 +32,31 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    final prefs = await SharedPreferences.getInstance();
-    final done = prefs.getBool('onboarding_done') ?? false;
-    if (!mounted) return;
+    Widget next;
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      final prefs = await SharedPreferences.getInstance();
+      final done = prefs.getBool('onboarding_done') ?? false;
+      if (!mounted) return;
 
-    if (!done) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const OnboardingScreen()));
-      return;
+      if (!done) {
+        next = const OnboardingScreen();
+      } else {
+        final auth = context.read<AuthProvider>();
+        final autoLogin = await auth.tryAutoLogin();
+        if (!mounted) return;
+        next = autoLogin ? const MainShell() : const LoginScreen();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      next = const LoginScreen();
     }
 
-    final auth = context.read<AuthProvider>();
-    final autoLogin = await auth.tryAutoLogin();
     if (!mounted) return;
-
-    if (autoLogin) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
-    } else {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
-    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => next),
+    );
   }
 
   @override

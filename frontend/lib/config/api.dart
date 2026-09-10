@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 const String _apiBaseUrl = String.fromEnvironment(
@@ -11,7 +11,8 @@ const String _apiBaseUrl = String.fromEnvironment(
 final String apiBaseUrl = _apiBaseUrl.replaceAll(RegExp(r'/+$'), '');
 
 class ApiClient {
-  final _storage = const FlutterSecureStorage();
+  static const _accessKey = 'access_token';
+  static const _refreshKey = 'refresh_token';
   String? _accessToken;
   String? _refreshToken;
 
@@ -19,22 +20,34 @@ class ApiClient {
   bool get isAuthenticated => _accessToken != null;
 
   Future<void> loadTokens() async {
-    _accessToken = await _storage.read(key: 'access_token');
-    _refreshToken = await _storage.read(key: 'refresh_token');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _accessToken = prefs.getString(_accessKey);
+      _refreshToken = prefs.getString(_refreshKey);
+    } catch (_) {
+      _accessToken = null;
+      _refreshToken = null;
+    }
   }
 
   Future<void> saveTokens(String access, String refresh) async {
     _accessToken = access;
     _refreshToken = refresh;
-    await _storage.write(key: 'access_token', value: access);
-    await _storage.write(key: 'refresh_token', value: refresh);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_accessKey, access);
+      await prefs.setString(_refreshKey, refresh);
+    } catch (_) {}
   }
 
   Future<void> clearTokens() async {
     _accessToken = null;
     _refreshToken = null;
-    await _storage.delete(key: 'access_token');
-    await _storage.delete(key: 'refresh_token');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_accessKey);
+      await prefs.remove(_refreshKey);
+    } catch (_) {}
   }
 
   Map<String, String> get _headers {
