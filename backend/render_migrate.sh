@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
-# Converts Render's DATABASE_URL into the DATABASE_* vars Django expects,
+# Converts DATABASE_URL into the DATABASE_* vars Django expects,
 # then runs migrations + static collection. Runs automatically on deploy.
 set -e
 
 if [ -n "$DATABASE_URL" ]; then
-  # postgres://USER:PASS@HOST:PORT/NAME
-  url="${DATABASE_URL#*://}"
-  export DATABASE_USER="${url%%:*}"
-  rest="${url#*:}"
-  export DATABASE_PASSWORD="${rest%%@*}"
-  hostport="${rest#*@}"
-  export DATABASE_HOST="${hostport%%:*}"
-  rest2="${hostport#*:}"
-  export DATABASE_PORT="${rest2%%/*}"
-  export DATABASE_NAME="${rest2#*/}"
-  export DATABASE_NAME="${DATABASE_NAME%%\?*}"
+  eval "$(python -c "
+import os, urllib.parse
+u = urllib.parse.urlparse(os.environ['DATABASE_URL'])
+print(f'export DATABASE_USER=\"{u.username}\"')
+print(f'export DATABASE_PASSWORD=\"{u.password}\"')
+print(f'export DATABASE_HOST=\"{u.hostname}\"')
+print(f'export DATABASE_PORT=\"{u.port or 5432}\"')
+print(f'export DATABASE_NAME=\"{u.path.lstrip(\"/\").split(\"?\")[0]}\"')
+")"
 fi
 
 export DEBUG=0
