@@ -1,14 +1,8 @@
-# Render.com blueprint — free-tier friendly.
+# Render.com blueprint — free-tier friendly, using Neon for Postgres.
 # 1. Push the repo to GitHub.
-# 2. In Render, "Blueprint" → paste this repo URL (or use the marketplace).
-# 3. Fill SECRET_KEY, DATABASE_* from the linked Postgres instance.
-# 4. Deploy. API will be live at https://<your-service>-<rand>.onrender.com/api/
-
-databases:
-  - name: fcarena-pg
-    plan: free
-    databaseName: fc_arena_db
-    user: fc_arena_user
+# 2. In Render, "New +" → "Web Service" → connect repo.
+# 3. Set env vars: DATABASE_URL, SECRET_KEY, CORS_ALLOWED_ORIGINS.
+# 4. Deploy.
 
 services:
   - type: web
@@ -32,6 +26,4 @@ services:
       - key: OCR_PROVIDER
         value: "auto"
       - key: DATABASE_URL
-        fromDatabase:
-          name: fcarena-pg
-          property: connectionString
+        sync: false
