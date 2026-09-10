@@ -1,0 +1,35 @@
+{
+    "name": "FC ARENA — Esports Management Platform",
+    "short_name": "FC ARENA",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0f0f23",
+    "theme_color": "#1a1a2e",
+    "description": "Manage matches, tournaments and leagues for console & PC esports with AI-assisted result verification.",
+    "orientation": "any",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

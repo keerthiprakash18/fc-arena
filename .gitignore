@@ -1,0 +1,27 @@
+# Backend
+backend/.env
+backend/venv/
+backend/staticfiles/
+backend/media/
+__pycache__/
+*.pyc
+
+# Frontend build artifacts
+frontend/build/
+frontend/.dart_tool/
+frontend/.flutter-plugins*
+frontend/.packages
+frontend/.pub-cache/
+
+# Android
+frontend/android/.gradle/
+frontend/android/app/key.properties
+frontend/android/app/*.keystore
+frontend/android/app/*.jks
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+Thumbs.db
+.DS_Store

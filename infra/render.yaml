@@ -1,0 +1,38 @@
+# Render.com blueprint — free-tier friendly.
+# 1. Push the repo to GitHub.
+# 2. In Render, "Blueprint" → paste this repo URL (or use the marketplace).
+# 3. Fill SECRET_KEY, DATABASE_* from the linked Postgres instance.
+# 4. Deploy. API will be live at https://<your-service>-<rand>.onrender.com/api/
+
+databases:
+  - name: fcarena-pg
+    plan: free
+    databaseName: fc_arena_db
+    user: fc_arena_user
+
+services:
+  - type: web
+    name: fcarena-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn config.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    preDeployCommand: "./render_migrate.sh"
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        sync: false
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: CORS_ALLOW_ALL_ORIGINS
+        value: "False"
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: OCR_PROVIDER
+        value: "auto"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fcarena-pg
+          property: connectionString
