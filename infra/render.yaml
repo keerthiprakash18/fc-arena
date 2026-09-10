@@ -22,7 +22,7 @@ services:
       - key: CORS_ALLOW_ALL_ORIGINS
         value: "False"
       - key: CORS_ALLOWED_ORIGINS
-        sync: false
+        value: "https://fc-arena.onrender.com,http://localhost:8080"
       - key: OCR_PROVIDER
         value: "auto"
       - key: DATABASE_URL

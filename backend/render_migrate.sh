@@ -13,6 +13,19 @@ print(f'export DATABASE_HOST=\"{u.hostname}\"')
 print(f'export DATABASE_PORT=\"{u.port or 5432}\"')
 print(f'export DATABASE_NAME=\"{u.path.lstrip(\"/\").split(\"?\")[0]}\"')
 ")"
+  # Write .env so gunicorn workers can also read DB config via python-decouple
+  python -c "
+import os, urllib.parse
+u = urllib.parse.urlparse(os.environ['DATABASE_URL'])
+env_path = os.path.join(os.path.dirname(os.path.abspath('.')), '.env')
+with open('.env', 'w') as f:
+    f.write(f'DATABASE_USER={u.username}\n')
+    f.write(f'DATABASE_PASSWORD={u.password}\n')
+    f.write(f'DATABASE_HOST={u.hostname}\n')
+    f.write(f'DATABASE_PORT={u.port or 5432}\n')
+    f.write(f'DATABASE_NAME={u.path.lstrip(\"/\").split(\"?\")[0]}\n')
+print('Wrote .env with DB credentials')
+"
 fi
 
 export DEBUG=0
