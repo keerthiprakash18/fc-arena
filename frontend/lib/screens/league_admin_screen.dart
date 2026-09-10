@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../config/api.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class LeagueAdminScreen extends StatefulWidget {
   const LeagueAdminScreen({super.key});
@@ -43,15 +44,15 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('League Admin', style: TextStyle(color: Colors.white)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _league == null
-              ? Center(child: Text('No league found', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))))
+              ? Center(child: Text('No league found', style: TextStyle(color: FCColors.white30)))
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView(padding: const EdgeInsets.all(16), children: [
@@ -68,7 +69,7 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF1a1a2e), Color(0xFF0f3460)]),
+        gradient: const LinearGradient(colors: [FCColors.surface, FCColors.surfaceLight]),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -78,7 +79,7 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
             onTap: _editLeague,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: FCColors.white10, borderRadius: BorderRadius.circular(8)),
               child: const Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(Icons.edit, size: 14, color: Colors.white),
                 SizedBox(width: 4),
@@ -89,7 +90,7 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
         ]),
         if ((_league!['description'] ?? '').isNotEmpty) ...[
           const SizedBox(height: 6),
-          Text(_league!['description'], style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.6))),
+          Text(_league!['description'], style: TextStyle(fontSize: 13, color: FCColors.white50)),
         ],
         const SizedBox(height: 12),
         GestureDetector(
@@ -117,7 +118,7 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        Text('${_league!['member_count'] ?? _members.length} members', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.5))),
+        Text('${_league!['member_count'] ?? _members.length} members', style: TextStyle(fontSize: 12, color: FCColors.white50)),
       ]),
     );
   }
@@ -125,7 +126,7 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
   Widget _membersHeader() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text('MEMBERS (${_members.length})', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.5), letterSpacing: 1)),
+      child: Text('MEMBERS (${_members.length})', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: FCColors.white50, letterSpacing: 1)),
     );
   }
 
@@ -139,7 +140,7 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(10)),
       child: Row(children: [
         CircleAvatar(
           radius: 18,
@@ -154,7 +155,7 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
         if (!isOwner) ...[
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.white54, size: 20),
-            color: const Color(0xFF1a1a2e),
+            color: FCColors.surface,
             onSelected: (v) {
               if (v == 'ADMIN' || v == 'PLAYER' || v == 'TOURNAMENT_ADMIN') {
                 _setRole(m, v);
@@ -190,7 +191,7 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: Text('Remove ${m['username']}?', style: const TextStyle(color: Colors.white, fontSize: 17)),
         content: const Text('They will be removed from the league. Matches keep their history.', style: TextStyle(color: Colors.white70)),
         actions: [
@@ -217,7 +218,7 @@ class _LeagueAdminScreenState extends State<LeagueAdminScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDState) => AlertDialog(
-          backgroundColor: const Color(0xFF1a1a2e),
+          backgroundColor: FCColors.surface,
           title: const Text('Edit League', style: TextStyle(color: Colors.white, fontSize: 18)),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             TextField(controller: _nameCtrl, style: const TextStyle(color: Colors.white),

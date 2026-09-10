@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../models/award.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class RecordsScreen extends StatefulWidget {
   const RecordsScreen({super.key});
@@ -36,22 +37,22 @@ class _RecordsScreenState extends State<RecordsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('League Records', style: TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : _records.isEmpty
                   ? Center(
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.leaderboard, size: 64, color: Colors.white.withValues(alpha: 0.15)),
+                        Icon(Icons.leaderboard, size: 64, color: FCColors.white15),
                         const SizedBox(height: 16),
-                        Text('No records yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                        Text('No records yet', style: TextStyle(color: FCColors.white50)),
                       ]),
                     )
                   : RefreshIndicator(
@@ -71,7 +72,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1a1a2e),
+        color: FCColors.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(children: [
@@ -86,7 +87,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(record.recordTypeDisplay, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+            Text(record.recordTypeDisplay, style: TextStyle(fontSize: 12, color: FCColors.white50)),
             const SizedBox(height: 2),
             Text(record.username, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           ]),
@@ -94,7 +95,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Text(record.value.toStringAsFixed(1), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.amber)),
           Text(record.achievedAt.length >= 10 ? record.achievedAt.substring(0, 10) : '',
-            style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.3))),
+            style: TextStyle(fontSize: 10, color: FCColors.white30)),
         ]),
       ]),
     );

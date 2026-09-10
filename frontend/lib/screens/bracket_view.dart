@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../config/api.dart';
 import '../models/match.dart';
 import '../services/api_service.dart';
@@ -34,7 +35,7 @@ class _BracketViewState extends State<BracketView> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: Color(0xFFe94560))));
+      return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: FCColors.accent)));
     }
 
     final completed = _matches.where((m) => m.status == 'VERIFIED').toList();
@@ -43,10 +44,10 @@ class _BracketViewState extends State<BracketView> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          const Icon(Icons.account_tree, color: Color(0xFFe94560), size: 20),
+          const Icon(Icons.account_tree, color: FCColors.accent, size: 20),
           const SizedBox(width: 8),
           Text('BRACKET (${_matches.length} matches)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 2)),
           const Spacer(),
@@ -68,7 +69,7 @@ class _BracketViewState extends State<BracketView> {
           ...completed.map((m) => _matchTile(m, Colors.green)),
         ],
         if (_matches.isEmpty)
-          Center(child: Text('No matches in this tournament yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.4)))),
+          Center(child: Text('No matches in this tournament yet', style: TextStyle(color: FCColors.white30))),
       ]),
     );
   }
@@ -91,7 +92,7 @@ class _BracketViewState extends State<BracketView> {
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: FCColors.white05,
         borderRadius: BorderRadius.circular(8),
         border: Border(left: BorderSide(color: color.withValues(alpha: 0.5), width: 3)),
       ),

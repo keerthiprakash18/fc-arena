@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../models/dashboard.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -57,9 +58,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Notifications', style: TextStyle(color: Colors.white)),
         actions: [
           if (_notifications.any((n) => !n.isRead))
@@ -72,14 +73,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _notifications.isEmpty
               ? Center(child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.notifications_none, size: 64, color: Colors.white.withValues(alpha: 0.2)),
                     const SizedBox(height: 16),
-                    Text('No notifications yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                    Text('No notifications yet', style: TextStyle(color: FCColors.white50)),
                   ],
                 ))
               : RefreshIndicator(
@@ -143,7 +144,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: n.isRead ? const Color(0xFF1a1a2e) : c.withValues(alpha: 0.08),
+            color: n.isRead ? FCColors.surface : c.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: n.isRead ? Colors.transparent : c.withValues(alpha: 0.3)),
           ),
@@ -162,10 +163,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   children: [
                     Text(n.title, style: TextStyle(
                       fontSize: 14, fontWeight: FontWeight.w600,
-                      color: n.isRead ? Colors.white.withValues(alpha: 0.7) : Colors.white,
+                      color: n.isRead ? FCColors.white70 : Colors.white,
                     )),
                     const SizedBox(height: 4),
-                    Text(n.message, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.5)),
+                    Text(n.message, style: TextStyle(fontSize: 13, color: FCColors.white50),
                         maxLines: 2, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
                     Text(n.createdAt, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.3))),

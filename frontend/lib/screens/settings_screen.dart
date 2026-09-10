@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -40,9 +41,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Settings', style: TextStyle(color: Colors.white)),
       ),
       body: ListView(
@@ -86,7 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(children: [
               Text('FC ARENA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.8))),
               const SizedBox(height: 4),
-              Text('Esports Tournament Platform', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.4))),
+              Text('Esports Tournament Platform', style: TextStyle(fontSize: 12, color: FCColors.white30)),
             ]),
           ),
         ],
@@ -97,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _sectionHeader(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.4), letterSpacing: 2)),
+      child: Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: FCColors.white30, letterSpacing: 2)),
     );
   }
 
@@ -105,13 +106,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(children: [
-        Icon(icon, color: const Color(0xFFe94560), size: 22),
+        Icon(icon, color: FCColors.accent, size: 22),
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title, style: const TextStyle(fontSize: 15, color: Colors.white)),
-          Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.4))),
+          Text(subtitle, style: TextStyle(fontSize: 12, color: FCColors.white30)),
         ])),
-        Switch(value: value, onChanged: onChanged, activeThumbColor: const Color(0xFFe94560)),
+        Switch(value: value, onChanged: onChanged, activeThumbColor: FCColors.accent),
       ]),
     );
   }
@@ -120,12 +121,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(children: [
-        Icon(icon, color: const Color(0xFFe94560), size: 22),
+        Icon(icon, color: FCColors.accent, size: 22),
         const SizedBox(width: 14),
         Expanded(child: Text(title, style: const TextStyle(fontSize: 15, color: Colors.white))),
         DropdownButton<String>(
           value: value,
-          dropdownColor: const Color(0xFF1a1a2e),
+          dropdownColor: FCColors.surface,
           style: const TextStyle(color: Colors.white),
           underline: const SizedBox(),
           items: options.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
@@ -142,7 +143,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Icon(icon, color: Colors.white54, size: 22),
         const SizedBox(width: 14),
         Expanded(child: Text(title, style: const TextStyle(fontSize: 15, color: Colors.white))),
-        Text(value, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.5))),
+        Text(value, style: TextStyle(fontSize: 14, color: FCColors.white50)),
       ]),
     );
   }

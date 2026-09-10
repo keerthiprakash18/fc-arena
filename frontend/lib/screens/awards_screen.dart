@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../models/award.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class AwardsScreen extends StatefulWidget {
   const AwardsScreen({super.key});
@@ -36,22 +37,22 @@ class _AwardsScreenState extends State<AwardsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Awards', style: TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : _awards.isEmpty
                   ? Center(
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.emoji_events_outlined, size: 64, color: Colors.white.withValues(alpha: 0.15)),
+                        Icon(Icons.emoji_events_outlined, size: 64, color: FCColors.white15),
                         const SizedBox(height: 16),
-                        Text('No awards yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                        Text('No awards yet', style: TextStyle(color: FCColors.white50)),
                       ]),
                     )
                   : RefreshIndicator(
@@ -71,7 +72,7 @@ class _AwardsScreenState extends State<AwardsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1a1a2e),
+        color: FCColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: isCustom ? Colors.cyan.withValues(alpha: 0.3) : Colors.amber.withValues(alpha: 0.3)),
       ),
@@ -83,7 +84,7 @@ class _AwardsScreenState extends State<AwardsScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(child: Text(
-            Award.awardIcons[award.awardType] ?? '🎖️',
+            Award.awardIcons[award.awardType] ?? 'ðŸŽ–ï¸',
             style: const TextStyle(fontSize: 26),
           )),
         ),
@@ -92,19 +93,19 @@ class _AwardsScreenState extends State<AwardsScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(award.displayName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 4),
-            Text(award.username, style: const TextStyle(fontSize: 14, color: Color(0xFFe94560), fontWeight: FontWeight.w600)),
+            Text(award.username, style: const TextStyle(fontSize: 14, color: FCColors.accent, fontWeight: FontWeight.w600)),
             if (award.description.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(award.description, maxLines: 2, overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.5))),
+                style: TextStyle(fontSize: 12, color: FCColors.white50)),
             ],
           ]),
         ),
         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text(award.source, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.4))),
+          Text(award.source, style: TextStyle(fontSize: 11, color: FCColors.white30)),
           const SizedBox(height: 4),
           Text(award.awardedAt.length >= 10 ? award.awardedAt.substring(0, 10) : award.awardedAt,
-            style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.3))),
+            style: TextStyle(fontSize: 11, color: FCColors.white30)),
         ]),
       ]),
     );

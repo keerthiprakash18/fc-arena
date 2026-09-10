@@ -3,6 +3,7 @@ import '../config/api.dart';
 import '../models/leaderboard.dart';
 import '../models/season.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 import 'player_stats_screen.dart';
 
 class LeaderboardScreen extends StatefulWidget {
@@ -46,14 +47,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Leaderboard', style: TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _loadData)],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : RefreshIndicator(
@@ -84,7 +85,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         const Text('STANDINGS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 2)),
         const SizedBox(height: 12),
         Container(
-          decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
           child: Column(children: [
             _tableHeader(),
             ..._standings.asMap().entries.map((e) => _tableRow(e.key + 1, e.value)),
@@ -155,7 +156,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               label: Text(label, style: TextStyle(fontSize: 12, color: selected ? Colors.white : Colors.white54)),
               selected: selected,
               onSelected: (_) { setState(() => _seasonId = id); _loadData(); },
-              selectedColor: const Color(0xFF0f3460),
+              selectedColor: FCColors.surfaceLight,
               backgroundColor: Colors.white.withValues(alpha: 0.08),
             );
           },
@@ -178,7 +179,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             label: Text(cat.replaceAll('_', ' '), style: TextStyle(fontSize: 12, color: selected ? Colors.white : Colors.white54)),
             selected: selected,
             onSelected: (_) { setState(() => _selectedCategory = cat); _loadData(); },
-            selectedColor: const Color(0xFFe94560),
+            selectedColor: FCColors.accent,
             backgroundColor: Colors.white.withValues(alpha: 0.08),
           );
         },
@@ -196,7 +197,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ..._leaderboard.map((e) => Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(8)),
           child: Row(children: [
             Text('${e.rank ?? '-'}', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(width: 12),

@@ -6,6 +6,7 @@ class User {
   final String? lastName;
   final String? gameUid;
   final String? gameInGameName;
+  final String? phoneNumber;
 
   User({
     required this.id,
@@ -15,6 +16,7 @@ class User {
     this.lastName,
     this.gameUid,
     this.gameInGameName,
+    this.phoneNumber,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -25,6 +27,7 @@ class User {
     lastName: json['last_name'],
     gameUid: json['game_uid'],
     gameInGameName: json['game_in_game_name'],
+    phoneNumber: json['phone_number'],
   );
 
   String get displayName => gameInGameName ?? username;

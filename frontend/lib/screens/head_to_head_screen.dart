@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../models/leaderboard.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 import 'player_stats_screen.dart';
 
 class HeadToHeadScreen extends StatefulWidget {
@@ -52,13 +53,13 @@ class _HeadToHeadScreenState extends State<HeadToHeadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Head to Head', style: TextStyle(color: Colors.white)),
       ),
       body: _playersLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -68,7 +69,7 @@ class _HeadToHeadScreenState extends State<HeadToHeadScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(50)),
-                    child: const Text('VS', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFe94560))),
+                    child: const Text('VS', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: FCColors.accent)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -79,8 +80,8 @@ class _HeadToHeadScreenState extends State<HeadToHeadScreen> {
                   child: ElevatedButton(
                     onPressed: (_player1Id != null && _player2Id != null && _player1Id != _player2Id) ? _compare : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFe94560),
-                      disabledBackgroundColor: Colors.white.withValues(alpha: 0.1),
+                      backgroundColor: FCColors.accent,
+                      disabledBackgroundColor: FCColors.white10,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: _loading
@@ -103,15 +104,15 @@ class _HeadToHeadScreenState extends State<HeadToHeadScreen> {
       const SizedBox(height: 6),
       DropdownButtonFormField<int>(
         initialValue: selected,
-        dropdownColor: const Color(0xFF1a1a2e),
+        dropdownColor: FCColors.surface,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          filled: true, fillColor: Colors.white.withValues(alpha: 0.08),
+          filled: true, fillColor: FCColors.white05,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
         isExpanded: true,
-        hint: Text('Select player', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+        hint: Text('Select player', style: TextStyle(color: FCColors.white30)),
         items: _players.map((p) => DropdownMenuItem(
           value: p.userId,
           child: Text('${p.username} (${p.points} pts)', style: const TextStyle(color: Colors.white)),
@@ -132,7 +133,7 @@ class _HeadToHeadScreenState extends State<HeadToHeadScreen> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Column(children: [
         Row(children: [
           Expanded(child: _playerStat(p1['username'] ?? '?', '$w1', Colors.green)),
@@ -140,7 +141,7 @@ class _HeadToHeadScreenState extends State<HeadToHeadScreen> {
           Expanded(child: _playerStat(p2['username'] ?? '?', '$w2', Colors.blue)),
         ]),
         const SizedBox(height: 10),
-        Text('Draws: $draws', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.5))),
+        Text('Draws: $draws', style: TextStyle(fontSize: 13, color: FCColors.white50)),
         const SizedBox(height: 12),
         Row(children: [
           Expanded(
@@ -170,7 +171,7 @@ class _HeadToHeadScreenState extends State<HeadToHeadScreen> {
           ...matches.map((m) => Container(
             margin: const EdgeInsets.only(bottom: 6),
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(color: FCColors.white05, borderRadius: BorderRadius.circular(8)),
             child: Row(children: [
               Text('${m['home'] ?? '?'}', style: const TextStyle(fontSize: 13, color: Colors.white)),
               const SizedBox(width: 6),

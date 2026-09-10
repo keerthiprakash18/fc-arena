@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../config/api.dart';
 import '../models/dashboard.dart';
 import '../services/api_service.dart';
@@ -44,14 +45,14 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Review Verification', style: TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : !_isAdmin
               ? _locked()
               : _error != null
@@ -66,12 +67,12 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
                           if (_data!.reviews.isEmpty)
                             Container(
                               padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+                              decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
                               child: Column(children: [
                                 Icon(Icons.task_alt, size: 48, color: Colors.green.withValues(alpha: 0.4)),
                                 const SizedBox(height: 12),
-                                Text('All caught up!', style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
-                                Text('No verifications waiting for review.', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.4))),
+                                Text('All caught up!', style: TextStyle(color: FCColors.white50)),
+                                Text('No verifications waiting for review.', style: TextStyle(fontSize: 12, color: FCColors.white30)),
                               ]),
                             )
                           else
@@ -91,11 +92,11 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
   Widget _locked() {
     return Center(
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(Icons.lock, size: 64, color: Colors.white.withValues(alpha: 0.2)),
+        Icon(Icons.lock, size: 64, color: FCColors.white10),
         const SizedBox(height: 16),
-        Text('Admin access only', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+        Text('Admin access only', style: TextStyle(color: FCColors.white50)),
         const SizedBox(height: 4),
-        Text('League owner/admins can review verifications', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.3))),
+        Text('League owner/admins can review verifications', style: TextStyle(fontSize: 12, color: FCColors.white30)),
       ]),
     );
   }
@@ -105,7 +106,7 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1a1a2e),
+        color: FCColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
@@ -123,7 +124,7 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
         ]),
         const SizedBox(height: 8),
         Text('Confidence: ${task.confidence != null ? '${(task.confidence! * 100).toStringAsFixed(0)}%' : 'N/A'}',
-          style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.6))),
+          style: TextStyle(fontSize: 13, color: FCColors.white50)),
         const SizedBox(height: 12),
         SizedBox(
           width: double.infinity, height: 42,
@@ -136,7 +137,7 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
               );
               if (done == true) _load();
             },
-            style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFe94560), side: const BorderSide(color: Color(0xFFe94560))),
+            style: OutlinedButton.styleFrom(foregroundColor: FCColors.accent, side: const BorderSide(color: FCColors.accent)),
             child: const Text('REVIEW NOW'),
           ),
         ),
@@ -148,16 +149,16 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.red.withValues(alpha: 0.3))),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.red.withValues(alpha: 0.3))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           const Icon(Icons.gavel, size: 16, color: Colors.red),
           const SizedBox(width: 8),
-          Text('Match #${dispute['match_id']} — raised by ${dispute['raised_by']}',
+          Text('Match #${dispute['match_id']} â€” raised by ${dispute['raised_by']}',
             style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
         ]),
         const SizedBox(height: 6),
-        Text('${dispute['reason']}', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+        Text('${dispute['reason']}', style: TextStyle(fontSize: 12, color: FCColors.white50)),
       ]),
     );
   }

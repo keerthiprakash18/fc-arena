@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../config/api.dart';
 import '../models/match.dart';
 import '../services/api_service.dart';
@@ -45,18 +46,18 @@ class _MatchScheduleScreenState extends State<MatchScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Match Schedule', style: TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : Column(children: [
               _filterChips(),
               Expanded(child: _filtered.isEmpty
-                  ? Center(child: Text('No matches', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))))
+                  ? Center(child: Text('No matches', style: TextStyle(color: FCColors.white30)))
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
@@ -85,8 +86,8 @@ class _MatchScheduleScreenState extends State<MatchScheduleScreen> {
               label: Text(filters[i].$2, style: TextStyle(fontSize: 13, color: selected ? Colors.white : Colors.white54)),
               selected: selected,
               onSelected: (_) => setState(() => _filter = filters[i].$1),
-              selectedColor: const Color(0xFFe94560),
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              selectedColor: FCColors.accent,
+              backgroundColor: FCColors.white05,
               side: BorderSide.none,
             ),
           );
@@ -108,7 +109,7 @@ class _MatchScheduleScreenState extends State<MatchScheduleScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFF1a1a2e),
+          color: FCColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border(left: BorderSide(color: color, width: 4)),
         ),
@@ -116,7 +117,7 @@ class _MatchScheduleScreenState extends State<MatchScheduleScreen> {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(match.homeUsername ?? '?', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 4),
-            Text(match.awayUsername ?? '?', style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.6))),
+            Text(match.awayUsername ?? '?', style: TextStyle(fontSize: 14, color: FCColors.white50)),
           ])),
           Column(children: [
             Container(
@@ -130,7 +131,7 @@ class _MatchScheduleScreenState extends State<MatchScheduleScreen> {
               ),
             ),
             const SizedBox(height: 4),
-            Text(match.createdAt.substring(0, 10), style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.3))),
+            Text(match.createdAt.substring(0, 10), style: TextStyle(fontSize: 11, color: FCColors.white30)),
           ]),
         ]),
       ),

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../models/dispute.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 import 'dispute_detail_screen.dart';
 import 'raise_dispute_screen.dart';
 
@@ -38,22 +39,22 @@ class _DisputesScreenState extends State<DisputesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Disputes', style: TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : _disputes.isEmpty
                   ? Center(
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.gavel, size: 64, color: Colors.white.withValues(alpha: 0.15)),
+                        Icon(Icons.gavel, size: 64, color: FCColors.white15),
                         const SizedBox(height: 16),
-                        Text('No disputes yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                        Text('No disputes yet', style: TextStyle(color: FCColors.white50)),
                       ]),
                     )
                   : RefreshIndicator(
@@ -69,7 +70,7 @@ class _DisputesScreenState extends State<DisputesScreen> {
           await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RaiseDisputeScreen()));
           _load();
         },
-        backgroundColor: const Color(0xFFe94560),
+        backgroundColor: FCColors.accent,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Raise Dispute'),
@@ -87,14 +88,14 @@ class _DisputesScreenState extends State<DisputesScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1a1a2e),
+          color: FCColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(
-              child: Text('Match #${dispute.matchId} — ${dispute.reasonLabel}',
+              child: Text('Match #${dispute.matchId} â€” ${dispute.reasonLabel}',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
             Container(
@@ -105,12 +106,12 @@ class _DisputesScreenState extends State<DisputesScreen> {
           ]),
           const SizedBox(height: 8),
           Text(dispute.description, maxLines: 2, overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.6))),
+            style: TextStyle(fontSize: 13, color: FCColors.white50)),
           const SizedBox(height: 8),
           Row(children: [
-            Text('Raised by ${dispute.raisedByName ?? '?'}', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.4))),
+            Text('Raised by ${dispute.raisedByName ?? '?'}', style: TextStyle(fontSize: 12, color: FCColors.white30)),
             const Spacer(),
-            Text('${dispute.comments.length} comments', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.4))),
+            Text('${dispute.comments.length} comments', style: TextStyle(fontSize: 12, color: FCColors.white30)),
           ]),
         ]),
       ),

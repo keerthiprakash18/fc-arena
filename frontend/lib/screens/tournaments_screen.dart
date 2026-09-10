@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../config/api.dart';
 import '../models/tournament.dart';
 import '../services/api_service.dart';
@@ -44,22 +45,22 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDState) => AlertDialog(
-          backgroundColor: const Color(0xFF1a1a2e),
+          backgroundColor: FCColors.surface,
           title: const Text('New Tournament', style: TextStyle(color: Colors.white, fontSize: 18)),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             TextField(
               controller: nameCtrl,
               style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(hintText: 'Tournament name', hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+              decoration: InputDecoration(hintText: 'Tournament name', hintStyle: TextStyle(color: FCColors.white30)),
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               initialValue: format,
-              dropdownColor: const Color(0xFF1a1a2e),
+              dropdownColor: FCColors.surface,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 label: const Text('Format', style: TextStyle(color: Colors.white54)),
-                filled: true, fillColor: Colors.white.withValues(alpha: 0.08),
+                filled: true, fillColor: FCColors.white05,
               ),
               isExpanded: true,
               items: const [
@@ -73,12 +74,12 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
             TextField(
               controller: descCtrl,
               style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(hintText: 'Description', hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+              decoration: InputDecoration(hintText: 'Description', hintStyle: TextStyle(color: FCColors.white30)),
             ),
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel', style: TextStyle(color: Colors.white54))),
-            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFe94560)), child: const Text('Create', style: TextStyle(color: Colors.white))),
+            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), style: ElevatedButton.styleFrom(backgroundColor: FCColors.accent), child: const Text('Create', style: TextStyle(color: Colors.white))),
           ],
         ),
       ),
@@ -96,29 +97,29 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Tournaments', style: TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createTournament,
-        backgroundColor: const Color(0xFFe94560),
+        backgroundColor: FCColors.accent,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('New Tournament'),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : _tournaments.isEmpty
                   ? Center(
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.emoji_events_outlined, size: 64, color: Colors.white.withValues(alpha: 0.15)),
+                        Icon(Icons.emoji_events_outlined, size: 64, color: FCColors.white15),
                         const SizedBox(height: 16),
-                        Text('No tournaments yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                        Text('No tournaments yet', style: TextStyle(color: FCColors.white50)),
                       ]),
                     )
                   : RefreshIndicator(
@@ -145,7 +146,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1a1a2e),
+          color: FCColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
@@ -161,7 +162,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(t.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(height: 2),
-                Text('${t.formatLabel} • ${t.code}', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.5))),
+                Text('${t.formatLabel} â€¢ ${t.code}', style: TextStyle(fontSize: 12, color: FCColors.white50)),
               ]),
             ),
             Container(
@@ -172,24 +173,24 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
           ]),
           const SizedBox(height: 10),
           Row(children: [
-            Icon(Icons.people, size: 14, color: Colors.white.withValues(alpha: 0.4)),
+            Icon(Icons.people, size: 14, color: FCColors.white30),
             const SizedBox(width: 4),
-            Text('${t.participantCount}/${t.maxParticipants}', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+            Text('${t.participantCount}/${t.maxParticipants}', style: TextStyle(fontSize: 12, color: FCColors.white50)),
             const Spacer(),
             if (t.entryFee > 0) ...[
               Icon(Icons.monetization_on, size: 14, color: Colors.amber.withValues(alpha: 0.5)),
               const SizedBox(width: 4),
-              Text('₹${t.entryFee.toStringAsFixed(0)} entry', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+              Text('â‚¹${t.entryFee.toStringAsFixed(0)} entry', style: TextStyle(fontSize: 12, color: FCColors.white50)),
             ],
             if (t.prizePool > 0) ...[
               const SizedBox(width: 12),
               Icon(Icons.emoji_events, size: 14, color: Colors.amber),
               const SizedBox(width: 4),
-              Text('₹${t.prizePool.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600)),
+              Text('â‚¹${t.prizePool.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600)),
             ],
           ]),
           const SizedBox(height: 8),
-          Text('Created by ${t.createdBy}', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.4))),
+          Text('Created by ${t.createdBy}', style: TextStyle(fontSize: 11, color: FCColors.white30)),
         ]),
       ),
     );

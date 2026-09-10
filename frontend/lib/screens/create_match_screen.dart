@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../config/api.dart';
 import '../providers/auth_provider.dart';
@@ -64,28 +65,28 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('New Match Challenge', style: TextStyle(color: Colors.white)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : _members.isEmpty
                   ? Center(
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.group_off, size: 64, color: Colors.white.withValues(alpha: 0.2)),
+                        Icon(Icons.group_off, size: 64, color: FCColors.white10),
                         const SizedBox(height: 16),
-                        Text('No opponents available', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                        Text('No opponents available', style: TextStyle(color: FCColors.white50)),
                       ]),
                     )
                   : Column(
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(16),
-                          child: Text('Choose your opponent', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+                          child: Text('Choose your opponent', style: TextStyle(color: FCColors.white70)),
                         ),
                         Expanded(
                           child: ListView.builder(
@@ -101,7 +102,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                             child: ElevatedButton(
                               onPressed: _creating ? null : _createMatch,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFe94560),
+                                backgroundColor: FCColors.accent,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
@@ -122,24 +123,24 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: selected ? const Color(0xFFe94560).withValues(alpha: 0.15) : const Color(0xFF1a1a2e),
+        color: selected ? FCColors.accent.withValues(alpha: 0.15) : FCColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: selected ? const Color(0xFFe94560) : Colors.white.withValues(alpha: 0.1), width: selected ? 1.5 : 1),
+        border: Border.all(color: selected ? FCColors.accent : FCColors.white10, width: selected ? 1.5 : 1),
       ),
       child: ListTile(
         onTap: () => setState(() => _selectedUserId = userId),
         leading: CircleAvatar(
-          backgroundColor: selected ? const Color(0xFFe94560) : Colors.white.withValues(alpha: 0.1),
+          backgroundColor: selected ? FCColors.accent : FCColors.white10,
           child: Text(
             (member['username'] ?? '?').toString()[0].toUpperCase(),
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
         title: Text(member['username'] ?? 'Unknown', style: const TextStyle(color: Colors.white)),
-        subtitle: Text('${member['email'] ?? ''}', style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12)),
+        subtitle: Text('${member['email'] ?? ''}', style: TextStyle(color: FCColors.white30, fontSize: 12)),
         trailing: Icon(
           selected ? Icons.radio_button_checked : Icons.radio_button_off,
-          color: selected ? const Color(0xFFe94560) : Colors.white.withValues(alpha: 0.3),
+          color: selected ? FCColors.accent : FCColors.white30,
         ),
       ),
     );

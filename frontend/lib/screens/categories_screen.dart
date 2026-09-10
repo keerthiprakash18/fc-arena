@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../models/category.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 import 'category_detail_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -52,14 +53,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDState) => AlertDialog(
-          backgroundColor: const Color(0xFF1a1a2e),
+          backgroundColor: FCColors.surface,
           title: const Text('New Category', style: TextStyle(color: Colors.white, fontSize: 18)),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             TextField(controller: nameCtrl, style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(hintText: 'Name (e.g. Open, Under-15)', hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)))),
+              decoration: InputDecoration(hintText: 'Name (e.g. Open, Under-15)', hintStyle: TextStyle(color: FCColors.white30))),
             const SizedBox(height: 8),
             TextField(controller: descCtrl, style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(hintText: 'Description', hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)))),
+              decoration: InputDecoration(hintText: 'Description', hintStyle: TextStyle(color: FCColors.white30))),
             const SizedBox(height: 10),
             Row(children: [
               Expanded(child: TextField(controller: minCtrl, keyboardType: TextInputType.number, style: const TextStyle(color: Colors.white),
@@ -103,9 +104,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Categories', style: TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
@@ -117,14 +118,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         label: const Text('New Category'),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : _categories.isEmpty
                   ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(Icons.category, size: 64, color: Colors.white.withValues(alpha: 0.15)),
+                      Icon(Icons.category, size: 64, color: FCColors.white15),
                       const SizedBox(height: 16),
-                      Text('No categories yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                      Text('No categories yet', style: TextStyle(color: FCColors.white50)),
                     ]))
                   : RefreshIndicator(
                       onRefresh: _load,
@@ -153,7 +154,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1a1a2e),
+          color: FCColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.4)),
         ),
@@ -167,13 +168,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(cat.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 2),
-            Text('${cat.minRating.toStringAsFixed(0)} – ${cat.maxRating.toStringAsFixed(0)} rating', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.5))),
+            Text('${cat.minRating.toStringAsFixed(0)} â€“ ${cat.maxRating.toStringAsFixed(0)} rating', style: TextStyle(fontSize: 12, color: FCColors.white50)),
           ])),
           Icon(Icons.chevron_right, color: color.withValues(alpha: 0.6)),
           const SizedBox(width: 6),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text('${cat.playerCount}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
-            Text('players', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.4))),
+            Text('players', style: TextStyle(fontSize: 11, color: FCColors.white30)),
           ]),
         ]),
       ),

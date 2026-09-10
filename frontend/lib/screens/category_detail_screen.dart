@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/api.dart';
 import '../models/category.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class CategoryDetailScreen extends StatefulWidget {
   final int leagueId;
@@ -82,12 +83,12 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     if (!mounted) return;
     final selected = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: FCColors.surface,
       builder: (ctx) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(
             title: const Text('Add player to category', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            subtitle: Text(widget.categoryName, style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+            subtitle: Text(widget.categoryName, style: TextStyle(color: FCColors.white50)),
           ),
           const Divider(color: Colors.white12),
           ConstrainedBox(
@@ -130,7 +131,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Remove player?', style: TextStyle(color: Colors.white)),
         content: Text('Remove ${p.username} from this category?', style: const TextStyle(color: Colors.white70)),
         actions: [
@@ -156,9 +157,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: Text(widget.categoryName, style: const TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
@@ -172,14 +173,14 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
             )
           : null,
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : _players.isEmpty
                   ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(Icons.people_outline, size: 64, color: Colors.white.withValues(alpha: 0.15)),
+                      Icon(Icons.people_outline, size: 64, color: FCColors.white15),
                       const SizedBox(height: 16),
-                      Text('No players in this category yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                      Text('No players in this category yet', style: TextStyle(color: FCColors.white50)),
                     ]))
                   : RefreshIndicator(
                       onRefresh: _load,
@@ -197,7 +198,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1a1a2e),
+        color: FCColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _color.withValues(alpha: 0.3)),
       ),

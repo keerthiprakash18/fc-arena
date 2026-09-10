@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/api.dart';
 import '../models/match.dart';
 import '../models/dispute.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class RaiseDisputeScreen extends StatefulWidget {
   const RaiseDisputeScreen({super.key});
@@ -87,10 +88,10 @@ class _RaiseDisputeScreenState extends State<RaiseDisputeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
-      appBar: AppBar(backgroundColor: const Color(0xFF1a1a2e), title: const Text('Raise Dispute', style: TextStyle(color: Colors.white))),
+      backgroundColor: FCColors.pitch,
+      appBar: AppBar(backgroundColor: FCColors.surface, title: const Text('Raise Dispute', style: TextStyle(color: Colors.white))),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : ListView(
@@ -103,18 +104,18 @@ class _RaiseDisputeScreenState extends State<RaiseDisputeScreen> {
                     else
                       DropdownButtonFormField<int>(
                         initialValue: _selectedMatchId,
-                        dropdownColor: const Color(0xFF1a1a2e),
+                        dropdownColor: FCColors.surface,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
-                          filled: true, fillColor: Colors.white.withValues(alpha: 0.08),
+                          filled: true, fillColor: FCColors.white05,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         ),
                         isExpanded: true,
-                        hint: Text('Choose match', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+                        hint: Text('Choose match', style: TextStyle(color: FCColors.white30)),
                         items: _myMatches.map((m) => DropdownMenuItem(
                           value: m.id,
-                          child: Text('Match #${m.id} — ${m.homeUsername ?? ''} vs ${m.awayUsername ?? ''} (${m.status.replaceAll('_', ' ')})',
+                          child: Text('Match #${m.id} â€” ${m.homeUsername ?? ''} vs ${m.awayUsername ?? ''} (${m.status.replaceAll('_', ' ')})',
                             style: const TextStyle(color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
                         )).toList(),
                         onChanged: (v) => setState(() => _selectedMatchId = v),
@@ -128,8 +129,8 @@ class _RaiseDisputeScreenState extends State<RaiseDisputeScreen> {
                         label: Text(r.$2, style: TextStyle(fontSize: 12, color: _selectedReason == r.$1 ? Colors.white : Colors.white70)),
                         selected: _selectedReason == r.$1,
                         onSelected: (_) => setState(() => _selectedReason = r.$1),
-                        selectedColor: const Color(0xFFe94560),
-                        backgroundColor: Colors.white.withValues(alpha: 0.08),
+                        selectedColor: FCColors.accent,
+                        backgroundColor: FCColors.white05,
                       )).toList(),
                     ),
                     const SizedBox(height: 20),
@@ -139,14 +140,14 @@ class _RaiseDisputeScreenState extends State<RaiseDisputeScreen> {
                       controller: _descriptionCtrl,
                       minLines: 4, maxLines: 8,
                       style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(hintText: 'Explain what happened...', hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+                      decoration: InputDecoration(hintText: 'Explain what happened...', hintStyle: TextStyle(color: FCColors.white30)),
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
                       height: 52,
                       child: ElevatedButton(
                         onPressed: _submitting ? null : _submit,
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFe94560), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                        style: ElevatedButton.styleFrom(backgroundColor: FCColors.accent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                         child: _submitting
                             ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                             : const Text('RAISE DISPUTE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),

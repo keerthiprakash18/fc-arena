@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../config/api.dart';
 import '../models/tournament.dart';
@@ -83,7 +84,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
 
     final selected = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: FCColors.surface,
       builder: (ctx) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
         ListTile(title: Text('Transition: ${_tournament!.statusLabel}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
         const Divider(color: Colors.white12),
@@ -98,7 +99,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
     if (selected == null) return;
     try {
       await _api.updateTournamentStatus(widget.leagueId, widget.tournamentId, selected);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status → $selected'), backgroundColor: Colors.green));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status â†’ $selected'), backgroundColor: Colors.green));
       _load();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: Colors.red));
@@ -112,7 +113,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(created != null && created > 0
-              ? 'Generated $created match(es) — tournament ready!'
+              ? 'Generated $created match(es) â€” tournament ready!'
               : 'Fixtures ready!'),
           backgroundColor: Colors.green));
         _load();
@@ -127,16 +128,16 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: Text(_tournament?.name ?? 'Tournament', style: const TextStyle(color: Colors.white)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : ListView(padding: const EdgeInsets.all(16), children: [
@@ -174,7 +175,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                         icon: const Icon(Icons.sports_score),
                         label: const Text('GENERATE FIXTURES', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFe94560),
+                          backgroundColor: FCColors.accent,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
@@ -191,7 +192,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                     ),
                   ]),
                   if (_participants.isEmpty)
-                    Text('No participants yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.4)))
+                    Text('No participants yet', style: TextStyle(color: FCColors.white30))
                   else
                     ..._participants.map((p) => _participantRow(p)),
                   if (_rounds.isNotEmpty) ...[
@@ -203,7 +204,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                     ..._rounds.map((r) => Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(color: FCColors.white05, borderRadius: BorderRadius.circular(8)),
                       child: Row(children: [
                         Icon(r.isCurrent ? Icons.radio_button_checked : Icons.radio_button_unchecked,
                           color: r.isCurrent ? Colors.green : Colors.white38, size: 18),
@@ -211,7 +212,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                         Text('Round ${r.roundNumber}: ${r.name}', style: TextStyle(
                           color: Colors.white, fontWeight: r.isCurrent ? FontWeight.bold : FontWeight.normal)),
                         const Spacer(),
-                        Text(r.roundType, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.4))),
+                        Text(r.roundType, style: TextStyle(fontSize: 12, color: FCColors.white30)),
                       ]),
                     )),
                   ],
@@ -226,7 +227,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1a1a2e),
+        color: FCColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -240,10 +241,10 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
           ),
         ]),
         const SizedBox(height: 10),
-        Text('${t.formatLabel} • ${t.code}', style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.6))),
+        Text('${t.formatLabel} â€¢ ${t.code}', style: TextStyle(fontSize: 14, color: FCColors.white50)),
         if (t.description.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(t.description, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7))),
+          Text(t.description, style: TextStyle(fontSize: 14, color: FCColors.white70)),
         ],
         const SizedBox(height: 10),
         Row(children: [
@@ -254,9 +255,9 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
         if (t.entryFee > 0 || t.prizePool > 0) ...[
           const SizedBox(height: 8),
           Row(children: [
-            if (t.entryFee > 0) _stat(Icons.monetization_on, 'Entry: ₹${t.entryFee.toStringAsFixed(0)}'),
+            if (t.entryFee > 0) _stat(Icons.monetization_on, 'Entry: â‚¹${t.entryFee.toStringAsFixed(0)}'),
             if (t.entryFee > 0 && t.prizePool > 0) const SizedBox(width: 16),
-            if (t.prizePool > 0) _stat(Icons.emoji_events, 'Prize: ₹${t.prizePool.toStringAsFixed(0)}'),
+            if (t.prizePool > 0) _stat(Icons.emoji_events, 'Prize: â‚¹${t.prizePool.toStringAsFixed(0)}'),
           ]),
         ],
       ]),
@@ -265,9 +266,9 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
 
   Widget _stat(IconData icon, String text) {
     return Row(children: [
-      Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.4)),
+      Icon(icon, size: 14, color: FCColors.white30),
       const SizedBox(width: 4),
-      Text(text, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+      Text(text, style: TextStyle(fontSize: 12, color: FCColors.white50)),
     ]);
   }
 
@@ -277,7 +278,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: FCColors.white05, borderRadius: BorderRadius.circular(8)),
       child: Row(children: [
         Icon(Icons.person, size: 18, color: isActive ? Colors.green : isElim ? Colors.red : Colors.white54),
         const SizedBox(width: 10),

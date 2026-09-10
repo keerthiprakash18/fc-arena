@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../config/api.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 import 'league_admin_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -50,9 +51,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('My Profile', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
@@ -62,7 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -106,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       SizedBox(height: MediaQuery.of(context).size.height * 0.15),
                       Icon(Icons.person, size: 64, color: Colors.white.withValues(alpha: 0.15)),
                       const SizedBox(height: 16),
-                      Text('No stats yet — play some matches!', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                      Text('No stats yet — play some matches!', style: TextStyle(color: FCColors.white50)),
                     ]),
                   ),
               ],
@@ -119,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1a1a2e), Color(0xFF16213e)],
+          colors: [FCColors.surface, FCColors.surface],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
@@ -127,7 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(children: [
         CircleAvatar(
           radius: 40,
-          backgroundColor: const Color(0xFFe94560),
+          backgroundColor: FCColors.accent,
           child: Text(
             (user?.username ?? 'U')[0].toUpperCase(),
             style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
@@ -136,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 12),
         Text(user?.username ?? 'Unknown', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
         const SizedBox(height: 4),
-        Text(user?.email ?? '', style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.5))),
+        Text(user?.email ?? '', style: TextStyle(fontSize: 14, color: FCColors.white50)),
         if (user?.isStaff == true) ...[
           const SizedBox(height: 6),
           Container(
@@ -168,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       itemCount: items.length,
       itemBuilder: (_, i) => Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(10)),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Text(items[i].$1, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: items[i].$3.withValues(alpha: 0.7))),
           const SizedBox(height: 2),
@@ -187,13 +188,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final color = change >= 0 ? Colors.green : Colors.red;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Column(children: [
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Text(rating.toStringAsFixed(0), style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: color)),
           const SizedBox(width: 6),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('RATING', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.5))),
+            Text('RATING', style: TextStyle(fontSize: 11, color: FCColors.white50)),
             Text('${change >= 0 ? '+' : ''}${change.toStringAsFixed(0)}', style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w600)),
           ]),
         ]),
@@ -210,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _miniStat(String label, String value) {
     return Column(children: [
       Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-      Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.4))),
+      Text(label, style: TextStyle(fontSize: 11, color: FCColors.white30)),
     ]);
   }
 }

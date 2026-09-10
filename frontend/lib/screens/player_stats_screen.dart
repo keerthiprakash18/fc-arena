@@ -3,6 +3,7 @@ import '../config/api.dart';
 import '../models/match.dart';
 import '../models/season.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class PlayerStatsScreen extends StatefulWidget {
   final int userId;
@@ -71,14 +72,14 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: Text(widget.username, style: const TextStyle(color: Colors.white, fontSize: 18)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : ListView(padding: const EdgeInsets.all(16), children: [
               if (_seasons.isNotEmpty) ...[
                 _seasonPicker(),
@@ -118,7 +119,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
               label: Text(label, style: TextStyle(fontSize: 12, color: selected ? Colors.white : Colors.white54)),
               selected: selected,
               onSelected: (_) { setState(() => _seasonId = id); _load(); },
-              selectedColor: const Color(0xFF0f3460),
+              selectedColor: FCColors.surfaceLight,
               backgroundColor: Colors.white.withValues(alpha: 0.08),
             );
           },
@@ -132,13 +133,13 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF1a1a2e), Color(0xFF0f3460)]),
+        gradient: const LinearGradient(colors: [FCColors.surface, FCColors.surfaceLight]),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(children: [
         CircleAvatar(
           radius: 30,
-          backgroundColor: const Color(0xFFe94560),
+          backgroundColor: FCColors.accent,
           child: Text(widget.username.isEmpty ? '?' : widget.username[0].toUpperCase(),
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
         ),
@@ -149,14 +150,14 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
           Text(s != null
               ? '${s['wins'] ?? 0}W - ${s['draws'] ?? 0}D - ${s['losses'] ?? 0}L  •  ${s['points'] ?? 0} pts'
               : 'No stats yet',
-              style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7))),
+              style: TextStyle(fontSize: 13, color: FCColors.white70)),
         ])),
         if (_rating != null && _rating! > 0)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
             child: Column(children: [
-              Text('RATING', style: TextStyle(fontSize: 9, color: Colors.white.withValues(alpha: 0.5), letterSpacing: 1)),
+              Text('RATING', style: TextStyle(fontSize: 9, color: FCColors.white50, letterSpacing: 1)),
               Text(_rating!.toStringAsFixed(1), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
             ]),
           ),
@@ -168,7 +169,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
     final form = _recentForm();
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Row(children: [
         const Text('RECENT FORM', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 1)),
         const SizedBox(width: 12),
@@ -223,9 +224,9 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
   Widget _tileCard(String title, List<(String, Object)> items) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.5), letterSpacing: 1)),
+        Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: FCColors.white50, letterSpacing: 1)),
         const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: items.length > 4 ? 3 : items.length,
@@ -236,7 +237,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
             Text('${e.$2}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 4),
             Text(e.$1, textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.4))),
+              style: TextStyle(fontSize: 10, color: FCColors.white30)),
           ])).toList(),
         ),
       ]),
@@ -249,9 +250,9 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('MATCH HISTORY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.5), letterSpacing: 1)),
+        Text('MATCH HISTORY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: FCColors.white50, letterSpacing: 1)),
         const SizedBox(height: 12),
         if (mine.isEmpty)
           Text('no matches', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.3)))

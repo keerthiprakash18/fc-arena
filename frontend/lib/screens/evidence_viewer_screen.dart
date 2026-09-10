@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'dart:typed_data';
 import '../config/api.dart';
 import '../services/api_service.dart';
@@ -43,16 +44,16 @@ class _EvidenceViewerViewState extends State<EvidenceViewerView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: Text('Evidence (${_evidences.length})', style: const TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _evidences.isEmpty
-              ? Center(child: Text('No evidence uploaded yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))))
+              ? Center(child: Text('No evidence uploaded yet', style: TextStyle(color: FCColors.white30)))
               : GridView.builder(
                   padding: const EdgeInsets.all(12),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -79,31 +80,31 @@ class _EvidenceViewerViewState extends State<EvidenceViewerView> {
         builder: (_, snap) {
           return Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1a1a2e),
+              color: FCColors.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              border: Border.all(color: FCColors.white05),
             ),
             clipBehavior: Clip.antiAlias,
             child: Column(children: [
               Expanded(
                 child: snap.connectionState == ConnectionState.waiting
-                    ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560), strokeWidth: 2))
+                    ? const Center(child: CircularProgressIndicator(color: FCColors.accent, strokeWidth: 2))
                     : snap.data != null
                         ? Image.memory(snap.data!, fit: BoxFit.cover, width: double.infinity)
-                        : Center(child: Icon(Icons.broken_image, color: Colors.white.withValues(alpha: 0.2), size: 40)),
+                        : Center(child: Icon(Icons.broken_image, color: FCColors.white10, size: 40)),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 child: Row(children: [
                   Expanded(child: Text(ev['file_name'] ?? 'Evidence', overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 12, color: Colors.white))),
-                  Text('${ev['file_size'] ?? 0} B', style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.4))),
+                  Text('${ev['file_size'] ?? 0} B', style: TextStyle(fontSize: 10, color: FCColors.white30)),
                 ]),
               ),
               if (ev['uploaded_by_name'] != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('by ${ev['uploaded_by_name']}', style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.4))),
+                  child: Text('by ${ev['uploaded_by_name']}', style: TextStyle(fontSize: 10, color: FCColors.white30)),
                 ),
             ]),
           );

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../models/season.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class SeasonsScreen extends StatefulWidget {
   const SeasonsScreen({super.key});
@@ -39,19 +40,19 @@ class _SeasonsScreenState extends State<SeasonsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('New Season', style: TextStyle(color: Colors.white, fontSize: 18)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(
             controller: nameCtrl,
             style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(hintText: 'Season name', hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+            decoration: InputDecoration(hintText: 'Season name', hintStyle: TextStyle(color: FCColors.white30)),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: descCtrl,
             style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(hintText: 'Description (optional)', hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+            decoration: InputDecoration(hintText: 'Description (optional)', hintStyle: TextStyle(color: FCColors.white30)),
           ),
         ]),
         actions: [
@@ -73,9 +74,9 @@ class _SeasonsScreenState extends State<SeasonsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Seasons', style: TextStyle(color: Colors.white)),
         actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
       ),
@@ -87,15 +88,15 @@ class _SeasonsScreenState extends State<SeasonsScreen> {
         label: const Text('New Season'),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : _seasons.isEmpty
                   ? Center(
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.wb_sunny_outlined, size: 64, color: Colors.white.withValues(alpha: 0.15)),
+                        Icon(Icons.wb_sunny_outlined, size: 64, color: FCColors.white15),
                         const SizedBox(height: 16),
-                        Text('No seasons yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                        Text('No seasons yet', style: TextStyle(color: FCColors.white50)),
                       ]),
                     )
                   : RefreshIndicator(
@@ -117,7 +118,7 @@ class _SeasonsScreenState extends State<SeasonsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1a1a2e),
+        color: FCColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -145,7 +146,7 @@ class _SeasonsScreenState extends State<SeasonsScreen> {
               ],
             ]),
             const SizedBox(height: 4),
-            Text('${season.memberCount} members', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.5))),
+            Text('${season.memberCount} members', style: TextStyle(fontSize: 12, color: FCColors.white50)),
           ]),
         ),
         Container(

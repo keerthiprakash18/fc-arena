@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class PlayerProfileScreen extends StatefulWidget {
   final int userId;
@@ -53,13 +54,13 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: Text(widget.username, style: const TextStyle(color: Colors.white)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -76,7 +77,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                   Center(
                     child: Column(children: [
                       SizedBox(height: MediaQuery.of(context).size.height * 0.15),
-                      Text('No stats available for this player', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                      Text('No stats available for this player', style: TextStyle(color: FCColors.white50)),
                     ]),
                   ),
               ],
@@ -88,7 +89,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     return Center(
       child: CircleAvatar(
         radius: 40,
-        backgroundColor: const Color(0xFFe94560),
+        backgroundColor: FCColors.accent,
         child: Text(
           widget.username[0].toUpperCase(),
           style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
@@ -105,7 +106,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     final color = change >= 0 ? Colors.green : Colors.red;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
         Column(children: [
           Text(rating.toStringAsFixed(0), style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: color)),
@@ -114,12 +115,12 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         Container(width: 1, height: 40, color: Colors.white12),
         Column(children: [
           Text(peak.toStringAsFixed(0), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
-          Text('Peak', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.4))),
+          Text('Peak', style: TextStyle(fontSize: 11, color: FCColors.white30)),
         ]),
         Container(width: 1, height: 40, color: Colors.white12),
         Column(children: [
           Text('$matches', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-          Text('Matches', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.4))),
+          Text('Matches', style: TextStyle(fontSize: 11, color: FCColors.white30)),
         ]),
       ]),
     );
@@ -144,7 +145,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       itemCount: items.length,
       itemBuilder: (_, i) => Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(10)),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Text(items[i].$1, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: items[i].$3.withValues(alpha: 0.7))),
           const SizedBox(height: 2),

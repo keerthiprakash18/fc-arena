@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../config/api.dart';
 import '../models/dashboard.dart';
 import '../models/match.dart';
@@ -45,7 +46,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: Text(approved ? 'Approve Verification' : 'Reject Verification',
           style: const TextStyle(color: Colors.white, fontSize: 18)),
         content: TextField(
@@ -54,7 +55,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: approved ? 'Optional note...' : 'Reason for rejection (required)',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+            hintStyle: TextStyle(color: FCColors.white30),
           ),
         ),
         actions: [
@@ -84,7 +85,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
       await _api.adminReview(widget.leagueId, widget.matchId, approved: approved, notes: notes);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(approved ? 'Verification approved — match verified!' : 'Verification rejected'),
+          content: Text(approved ? 'Verification approved â€” match verified!' : 'Verification rejected'),
           backgroundColor: approved ? Colors.green : Colors.red,
         ));
         Navigator.of(context).pop(true);
@@ -98,13 +99,13 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: Text('Review Match #${widget.matchId}', style: const TextStyle(color: Colors.white)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : ListView(
@@ -127,14 +128,14 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
     if (m == null) return const SizedBox();
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFe94560), Color(0xFF0f3460)]), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(gradient: const LinearGradient(colors: [FCColors.accent, FCColors.surfaceLight]), borderRadius: BorderRadius.circular(16)),
       child: Column(children: [
         Text('${m.homeUsername ?? 'Home'} vs ${m.awayUsername ?? 'Away'}', textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
         const SizedBox(height: 12),
         Text(m.scoreDisplay, style: const TextStyle(fontSize: 44, fontWeight: FontWeight.bold, color: Colors.white)),
         const SizedBox(height: 4),
-        Text('Submitted score', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7))),
+        Text('Submitted score', style: TextStyle(fontSize: 12, color: FCColors.white70)),
       ]),
     );
   }
@@ -143,20 +144,20 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
     final t = _task!;
     final items = <(String, String)>[
       ('Status', t.status.replaceAll('_', ' ')),
-      ('AI Provider', t.aiProvider ?? '—'),
-      ('Confidence', t.aiConfidenceScore != null ? '${(double.tryParse(t.aiConfidenceScore.toString())! * 100).toStringAsFixed(1)}%' : '—'),
-      ('Evidence', t.evidenceFile ?? '—'),
+      ('AI Provider', t.aiProvider ?? 'â€”'),
+      ('Confidence', t.aiConfidenceScore != null ? '${(double.tryParse(t.aiConfidenceScore.toString())! * 100).toStringAsFixed(1)}%' : 'â€”'),
+      ('Evidence', t.evidenceFile ?? 'â€”'),
     ];
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('VERIFICATION', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 2)),
         const SizedBox(height: 10),
         ...items.map((e) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(children: [
-            Text('${e.$1}: ', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.5))),
+            Text('${e.$1}: ', style: TextStyle(fontSize: 13, color: FCColors.white50)),
             Text(e.$2, style: const TextStyle(fontSize: 13, color: Colors.white)),
           ]),
         )),
@@ -168,12 +169,12 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
     final results = _task?.results ?? [];
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('AI EXTRACTED DATA', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 2)),
         const SizedBox(height: 10),
         if (results.isEmpty)
-          Text('No extraction results', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.4)))
+          Text('No extraction results', style: TextStyle(fontSize: 13, color: FCColors.white30))
         else
           ...results.map((r) => Container(
             margin: const EdgeInsets.only(bottom: 8),

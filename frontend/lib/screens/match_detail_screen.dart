@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../config/api.dart';
 import '../models/match.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 import 'evidence_viewer_screen.dart';
 
 class MatchDetailScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Submit Result', style: TextStyle(color: Colors.white)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           Text('${_match!.homeUsername} vs ${_match!.awayUsername}', style: const TextStyle(color: Colors.white70)),
@@ -69,7 +70,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFe94560)),
+            style: ElevatedButton.styleFrom(backgroundColor: FCColors.accent),
             child: const Text('Submit', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -162,11 +163,11 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Scaffold(backgroundColor: const Color(0xFF0f0f23),
-        body: const Center(child: CircularProgressIndicator(color: Color(0xFFe94560))));
+      return Scaffold(backgroundColor: FCColors.pitch,
+        body: const Center(child: CircularProgressIndicator(color: FCColors.accent)));
     }
     if (_error != null || _match == null) {
-      return Scaffold(backgroundColor: const Color(0xFF0f0f23),
+      return Scaffold(backgroundColor: FCColors.pitch,
         body: Center(child: Text(_error ?? 'Match not found', style: const TextStyle(color: Colors.white70))));
     }
     final match = _match!;
@@ -177,9 +178,9 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
     final color = statusColors[match.status] ?? Colors.grey;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: Text('Match #${match.id}', style: const TextStyle(color: Colors.white)),
       ),
       body: ListView(
@@ -188,7 +189,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [color.withValues(alpha: 0.2), const Color(0xFF1a1a2e)]),
+              gradient: LinearGradient(colors: [color.withValues(alpha: 0.2), FCColors.surface]),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(children: [
@@ -206,7 +207,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
             ]),
           ),
           const SizedBox(height: 24),
-          if (_actionInProgress) const Center(child: CircularProgressIndicator(color: Color(0xFFe94560))),
+          if (_actionInProgress) const Center(child: CircularProgressIndicator(color: FCColors.accent)),
           if (!_actionInProgress) ...[
             if (match.status == 'SCHEDULED')
               _actionButton('Start Match', Icons.play_arrow, Colors.teal, _startMatch),
@@ -254,7 +255,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [
-        Text('$label: ', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13)),
+        Text('$label: ', style: TextStyle(color: FCColors.white50, fontSize: 13)),
         Text(value, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
       ]),
     );
@@ -273,7 +274,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
     };
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           const Text('MATCH EVENTS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 2)),
@@ -307,7 +308,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
               const SizedBox(width: 8),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(e['event_type_display'] ?? e['event_type'] ?? '', style: const TextStyle(fontSize: 13, color: Colors.white)),
-                Text(e['username'] ?? '', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.5))),
+                Text(e['username'] ?? '', style: TextStyle(fontSize: 11, color: FCColors.white50)),
               ])),
             ]),
           );
@@ -333,7 +334,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDState) => AlertDialog(
-          backgroundColor: const Color(0xFF1a1a2e),
+          backgroundColor: FCColors.surface,
           title: const Text('Add Event', style: TextStyle(color: Colors.white, fontSize: 18)),
           content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
             TextField(controller: minuteCtrl, keyboardType: TextInputType.number, style: const TextStyle(color: Colors.white),
@@ -341,7 +342,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               initialValue: eventType,
-              dropdownColor: const Color(0xFF1a1a2e),
+              dropdownColor: FCColors.surface,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(labelText: 'Event Type', labelStyle: const TextStyle(color: Colors.white54),
                 filled: true, fillColor: Colors.white.withValues(alpha: 0.08)),
@@ -352,12 +353,12 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
             const SizedBox(height: 10),
             DropdownButtonFormField<int>(
               initialValue: playerId,
-              dropdownColor: const Color(0xFF1a1a2e),
+              dropdownColor: FCColors.surface,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(labelText: 'Player', labelStyle: const TextStyle(color: Colors.white54),
                 filled: true, fillColor: Colors.white.withValues(alpha: 0.08)),
               isExpanded: true,
-              hint: Text('Select player', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+              hint: Text('Select player', style: TextStyle(color: FCColors.white30)),
               items: members.map((m) => DropdownMenuItem<int>(value: m['id'] as int, child: Text(m['username'] ?? '', style: const TextStyle(color: Colors.white)))).toList(),
               onChanged: (v) => setDState(() => playerId = v),
             ),
@@ -382,7 +383,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
   Widget _statsCard() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1a1a2e), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('MATCH STATS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 2)),
         const SizedBox(height: 12),
@@ -419,7 +420,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
           const SizedBox(width: 8),
           Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: hPct, backgroundColor: Colors.blue.withValues(alpha: 0.2), valueColor: const AlwaysStoppedAnimation(Colors.blue), minHeight: 8))),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.5))),
+          Text(label, style: TextStyle(fontSize: 11, color: FCColors.white50)),
           const SizedBox(width: 6),
           Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: (1.0 - hPct).clamp(0.0, 1.0), backgroundColor: Colors.red.withValues(alpha: 0.2), valueColor: const AlwaysStoppedAnimation(Colors.red), minHeight: 8))),
           const SizedBox(width: 8),

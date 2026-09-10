@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
+import '../theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -15,7 +16,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _slides = [
     (
       icon: Icons.groups,
-      color: Color(0xFFe94560),
+      color: FCColors.accent,
       title: 'Leagues & Clubs',
       body: 'Create or join a league with a shareable invite code. Manage members, roles and certified results in one place.',
     ),
@@ -50,7 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       body: SafeArea(
         child: Column(children: [
           Align(
@@ -76,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Container(
                       width: 120, height: 120,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [s.color, const Color(0xFF0f3460)]),
+                        gradient: LinearGradient(colors: [s.color, FCColors.surfaceLight]),
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [BoxShadow(color: s.color.withValues(alpha: 0.35), blurRadius: 30, spreadRadius: 4)],
                       ),
@@ -87,7 +88,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(height: 16),
                     Text(s.body, textAlign: TextAlign.center, style: TextStyle(
-                      fontSize: 14, height: 1.5, color: Colors.white.withValues(alpha: 0.6))),
+                      fontSize: 14, height: 1.5, color: FCColors.white50)),
                   ]),
                 );
               },
@@ -101,7 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               width: i == _page ? 24 : 8,
               height: 8,
               decoration: BoxDecoration(
-                color: i == _page ? const Color(0xFFe94560) : Colors.white24,
+                color: i == _page ? FCColors.accent : Colors.white24,
                 borderRadius: BorderRadius.circular(4),
               ),
             )),
@@ -119,7 +120,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         curve: Curves.easeIn,
                       ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFe94560),
+                  backgroundColor: FCColors.accent,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),

@@ -46,7 +46,11 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String username, String email, String password, {String? gameName}) async {
+  Future<bool> register(String username, String email, String password, {
+    String? gameUid,
+    String? gameInGameName,
+    String? phoneNumber,
+  }) async {
     _loading = true;
     _error = null;
     notifyListeners();
@@ -55,7 +59,9 @@ class AuthProvider extends ChangeNotifier {
         username: username,
         email: email,
         password: password,
-        gameInGameName: gameName,
+        gameUid: gameUid,
+        gameInGameName: gameInGameName,
+        phoneNumber: phoneNumber,
       );
       _loading = false;
       notifyListeners();

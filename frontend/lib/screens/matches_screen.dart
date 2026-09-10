@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../models/match.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 import 'match_detail_screen.dart';
 import 'create_match_screen.dart';
 
@@ -38,16 +39,16 @@ class _MatchesScreenState extends State<MatchesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f23),
+      backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1a1a2e),
+        backgroundColor: FCColors.surface,
         title: const Text('Matches', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _loadMatches),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFe94560)))
+          ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
               ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text(_error!, style: const TextStyle(color: Colors.white70)),
@@ -58,7 +59,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
                   ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Icon(Icons.sports_soccer, size: 64, color: Colors.white.withValues(alpha: 0.15)),
                       const SizedBox(height: 16),
-                      Text('No matches yet', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                      Text('No matches yet', style: TextStyle(color: FCColors.white50)),
                       const SizedBox(height: 8),
                       Text('Create your first match to get started', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.3))),
                       const SizedBox(height: 16),
@@ -71,7 +72,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
                         },
                         icon: const Icon(Icons.add),
                         label: const Text('New Match'),
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFe94560), foregroundColor: Colors.white),
+                        style: ElevatedButton.styleFrom(backgroundColor: FCColors.accent, foregroundColor: Colors.white),
                       ),
                     ]))
                   : RefreshIndicator(
@@ -89,7 +90,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
           );
           if (created == true) _loadMatches();
         },
-        backgroundColor: const Color(0xFFe94560),
+        backgroundColor: FCColors.accent,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('New Match'),
@@ -110,7 +111,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1a1a2e),
+          color: FCColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: statusColor.withValues(alpha: 0.3)),
         ),
@@ -122,7 +123,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(match.homeUsername ?? 'Home', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(height: 2),
-                    Text(match.awayUsername ?? 'Away', style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7))),
+                    Text(match.awayUsername ?? 'Away', style: TextStyle(fontSize: 14, color: FCColors.white70)),
                   ]),
                 ),
                 Container(

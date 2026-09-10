@@ -30,13 +30,17 @@ class ApiService {
     required String username,
     required String email,
     required String password,
+    String? gameUid,
     String? gameInGameName,
+    String? phoneNumber,
   }) async {
     await _client.post('/auth/register/', {
       'username': username,
       'email': email,
       'password': password,
-      'game_in_game_name': gameInGameName,
+      if (gameUid != null && gameUid.isNotEmpty) 'game_uid': gameUid,
+      if (gameInGameName != null && gameInGameName.isNotEmpty) 'game_in_game_name': gameInGameName,
+      if (phoneNumber != null && phoneNumber.isNotEmpty) 'phone_number': phoneNumber,
     });
     return await login(username, password);
   }
