@@ -111,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       return Transform.translate(
                         offset: Offset(0, _slideAnim.value),
                         child: Opacity(
-                          opacity: _slideAnim.value == 30 ? 0 : 1,
+                          opacity: _slideAnim.value > 29.0 ? 0 : 1,
                           child: Text(
                             'FOOTBALL TOURNAMENT PLATFORM',
                             style: TextStyle(

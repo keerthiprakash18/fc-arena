@@ -13,11 +13,10 @@ print(f'export DATABASE_HOST=\"{u.hostname}\"')
 print(f'export DATABASE_PORT=\"{u.port or 5432}\"')
 print(f'export DATABASE_NAME=\"{u.path.lstrip(\"/\").split(\"?\")[0]}\"')
 ")"
-  # Write .env so gunicorn workers can also read DB config via python-decouple
+  # Write .env so gunicorn workers (a separate process) can read the DB config.
   python -c "
 import os, urllib.parse
 u = urllib.parse.urlparse(os.environ['DATABASE_URL'])
-env_path = os.path.join(os.path.dirname(os.path.abspath('.')), '.env')
 with open('.env', 'w') as f:
     f.write(f'DATABASE_USER={u.username}\n')
     f.write(f'DATABASE_PASSWORD={u.password}\n')
@@ -32,15 +31,16 @@ export DEBUG=0
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput --clear
 
-# Create default superuser if none exists
-python -c "
-import os, django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-django.setup()
-from accounts.models import User
-if not User.objects.filter(is_superuser=True).exists():
-    User.objects.create_superuser('admin', 'admin@fcarena.com', 'Admin@123')
-    print('Created superuser: admin / Admin@123')
-else:
-    print('Superuser already exists')
-"
+# Create an initial superuser only when credentials are supplied via env vars.
+# We deliberately do NOT bake in a default password: a predictable admin login
+# on a public URL is an open door. Set DJANGO_SUPERUSER_USERNAME and
+# DJANGO_SUPERUSER_PASSWORD in your host's environment to have one created.
+if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
+  python manage.py createsuperuser --noinput 2>/dev/null \
+    && echo "Created superuser: $DJANGO_SUPERUSER_USERNAME" \
+    || echo "Superuser '$DJANGO_SUPERUSER_USERNAME' already exists - leaving it untouched."
+else
+  echo "No DJANGO_SUPERUSER_USERNAME/PASSWORD set - skipping superuser creation."
+  echo "To create one later: Render dashboard -> Shell ->"
+  echo "  python manage.py createsuperuser"
+fi

@@ -21,11 +21,28 @@ class MatchSerializer(serializers.ModelSerializer):
 
 
 class MatchCreateSerializer(serializers.ModelSerializer):
+    """Create a match, then echo back the same shape as ``MatchSerializer``.
+
+    The client parses the POST response straight into its Match model, so the
+    response must carry ``status``/``league``/usernames — otherwise the freshly
+    created object arrives with a null league and a defaulted status.
+    """
+
+    home_username = serializers.CharField(source='home_user.username', read_only=True)
+    away_username = serializers.CharField(source='away_user.username', read_only=True)
+    league_name = serializers.CharField(source='league.name', read_only=True)
+
     class Meta:
         model = Match
-        fields = ['id', 'tournament', 'round', 'home_user', 'away_user',
-                  'scheduled_at']
-        read_only_fields = ['id']
+        fields = ['id', 'league', 'league_name', 'tournament', 'round',
+                  'home_user', 'home_username', 'away_user', 'away_username',
+                  'home_score', 'away_score', 'status', 'scheduled_at',
+                  'played_at', 'verified_at', 'verified_by',
+                  'is_idempotent_processed', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'league', 'league_name', 'home_username',
+                            'away_username', 'home_score', 'away_score',
+                            'status', 'played_at', 'verified_at', 'verified_by',
+                            'is_idempotent_processed', 'created_at', 'updated_at']
 
     def validate(self, attrs):
         attrs['league'] = self.context['league']

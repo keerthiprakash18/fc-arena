@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/api.dart';
+import '../models/user.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
@@ -41,9 +42,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } catch (_) {
         admin = false;
       }
-      setState(() { _ratings = ratings; _stats = stats; _isAdmin = admin; _loading = false; });
+      if (mounted) {
+        setState(() { _ratings = ratings; _stats = stats; _isAdmin = admin; _loading = false; });
+      }
     } catch (e) {
-      setState(() { _loading = false; });
+      if (mounted) setState(() { _loading = false; });
     }
   }
 
@@ -115,7 +118,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _profileHeader(dynamic user) {
+  Widget _profileHeader(User? user) {
+    final displayName = user?.displayName ?? 'Unknown';
+    final photo = user?.profilePhoto;
+    final email = user?.email ?? '';
+    final isStaff = user?.isStaff ?? false;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -129,16 +136,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CircleAvatar(
           radius: 40,
           backgroundColor: FCColors.accent,
-          child: Text(
-            (user?.username ?? 'U')[0].toUpperCase(),
+          backgroundImage: (photo != null && photo.isNotEmpty) ? NetworkImage(photo) : null,
+          child: (photo != null && photo.isNotEmpty) ? null : Text(
+            displayName[0].toUpperCase(),
             style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
         const SizedBox(height: 12),
-        Text(user?.username ?? 'Unknown', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+        Text(displayName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+        if ((user?.firstName != null && user!.firstName!.isNotEmpty) || (user?.lastName != null && user!.lastName!.isNotEmpty)) ...[
+          const SizedBox(height: 2),
+          Text([user.firstName, user.lastName].whereType<String>().where((s) => s.isNotEmpty).join(' '), style: TextStyle(fontSize: 13, color: FCColors.white70)),
+        ],
         const SizedBox(height: 4),
-        Text(user?.email ?? '', style: TextStyle(fontSize: 14, color: FCColors.white50)),
-        if (user?.isStaff == true) ...[
+        Text(email, style: TextStyle(fontSize: 14, color: FCColors.white50)),
+        if (isStaff) ...[
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),

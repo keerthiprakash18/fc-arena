@@ -331,9 +331,9 @@ class ApiService {
       'max_participants': maxParticipants,
       'entry_fee': entryFee,
       'prize_pool': prizePool,
-      '?registration_deadline': registrationDeadline,
-      '?start_date': startDate,
-      '?end_date': endDate,
+      'registration_deadline': ?registrationDeadline,
+      'start_date': ?startDate,
+      'end_date': ?endDate,
     });
     return Tournament.fromJson(data);
   }

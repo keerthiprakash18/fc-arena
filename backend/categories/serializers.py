@@ -20,6 +20,21 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
         model = Category
         fields = ['name', 'description', 'min_rating', 'max_rating', 'is_active', 'color']
 
+    def validate_name(self, value):
+        """Catch duplicate names before the DB does.
+
+        ``slug`` is derived from ``name`` and is unique per league, so a second
+        "Gold" category would otherwise raise an uncaught IntegrityError (HTTP
+        500). Reject it with a readable message instead.
+        """
+        league = self.context['league']
+        slug = value.lower().replace(' ', '-')
+        if Category.objects.filter(league=league, slug=slug).exists():
+            raise serializers.ValidationError(
+                f"A category named '{value}' already exists in this league."
+            )
+        return value
+
     def create(self, validated_data):
         league = self.context['league']
         slug = validated_data['name'].lower().replace(' ', '-')

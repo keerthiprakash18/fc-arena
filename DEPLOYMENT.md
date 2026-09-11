@@ -53,14 +53,27 @@ git push -u origin main
    https://fcarena-api.onrender.com/
    API base URL:  https://fcarena-api.onrender.com/api/
    ```
-6. Create the admin superuser. Render web services are stateless, so run it **once** through the shell:
-   - Render dashboard → fcarena-api → **Shell** → type:
-     ```bash
-     echo "from accounts.models import User; User.objects.create_superuser('luciferkp','a@b.com','keerthi@1518')" | python manage.py shell
-     ```
-   - (Change the password afterwards in the Django admin.)
+6. Create the admin superuser. Pick **one** of these:
+
+   **a) Automatic (recommended)** — add these env vars to the web service, then redeploy:
+   ```
+   DJANGO_SUPERUSER_USERNAME=luciferkp
+   DJANGO_SUPERUSER_PASSWORD=<a strong password>
+   DJANGO_SUPERUSER_EMAIL=you@example.com
+   ```
+   `render_migrate.sh` creates the account on deploy and leaves it alone on later deploys.
+
+   **b) Manual** — Render dashboard → fcarena-api → **Shell**:
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+   > There is deliberately **no default password**. An earlier version of this
+   > script created `admin` / `Admin@123` automatically, which is a public
+   > open door on any deployed URL — do not reintroduce it.
 
 Verify: open `https://fcarena-api.onrender.com/api/` and `/admin/` — both should load.
+`/api/health/` should return `{"status": "ok", "database": true, ...}`.
 
 > **OCR note:** the free local OCR (`winrt`) is Windows-only. On Render/Linux the pipeline skips OCR and falls back to **manual admin verification** — results are still verified, just not auto-OCR'd. Paid OCR (`EXPLABS_*` keys) can be added later without code changes.
 

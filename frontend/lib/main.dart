@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
 import 'config/api.dart';
 import 'providers/auth_provider.dart';
 import 'services/api_service.dart';
@@ -13,8 +14,23 @@ import 'screens/notifications_screen.dart';
 import 'screens/admin_review_screen.dart';
 import 'screens/login_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    if (kReleaseMode) {
+      debugPrint('FLUTTER ERROR: ${details.exception}');
+    }
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('UNCAUGHT ERROR: $error\n$stack');
+    return true;
+  };
+
+  // Restore any user-chosen backend URL before the first request goes out.
+  await loadApiBaseUrl();
+
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,

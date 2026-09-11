@@ -7,6 +7,11 @@ class User {
   final String? gameUid;
   final String? gameInGameName;
   final String? phoneNumber;
+  final String? profilePhoto;
+  final String? dateOfBirth;
+  final bool isStaff;
+  final bool isSuperuser;
+  final String? dateJoined;
 
   User({
     required this.id,
@@ -17,6 +22,11 @@ class User {
     this.gameUid,
     this.gameInGameName,
     this.phoneNumber,
+    this.profilePhoto,
+    this.dateOfBirth,
+    this.isStaff = false,
+    this.isSuperuser = false,
+    this.dateJoined,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -28,6 +38,11 @@ class User {
     gameUid: json['game_uid'],
     gameInGameName: json['game_in_game_name'],
     phoneNumber: json['phone_number'],
+    profilePhoto: json['profile_photo'],
+    dateOfBirth: json['date_of_birth'],
+    isStaff: json['isStaff'] ?? json['is_staff'] ?? false,
+    isSuperuser: json['isSuperuser'] ?? json['is_superuser'] ?? false,
+    dateJoined: json['dateJoined'] ?? json['date_joined'],
   );
 
   String get displayName => gameInGameName ?? username;

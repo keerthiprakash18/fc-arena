@@ -2,13 +2,56 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-const String _apiBaseUrl = String.fromEnvironment(
+const String defaultApiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
   defaultValue: 'http://10.0.2.2:8000/api',
 );
 
-// Normalize base URL: strip trailing slashes so path joins are clean.
-final String apiBaseUrl = _apiBaseUrl.replaceAll(RegExp(r'/+$'), '');
+/// SharedPreferences key holding a user-chosen server URL.
+const String apiBaseUrlPrefKey = 'api_base_url';
+
+/// Strip whitespace and trailing slashes so path joins stay clean.
+String normalizeBaseUrl(String url) => url.trim().replaceAll(RegExp(r'/+$'), '');
+
+String _activeApiBaseUrl = normalizeBaseUrl(defaultApiBaseUrl);
+
+/// The base URL every request uses right now.
+String get apiBaseUrl => _activeApiBaseUrl;
+
+/// True when the app is pointed at something other than the build-time default.
+bool get hasCustomApiBaseUrl =>
+    _activeApiBaseUrl != normalizeBaseUrl(defaultApiBaseUrl);
+
+/// Restore a saved override. Called once from main() before the app starts.
+Future<void> loadApiBaseUrl() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(apiBaseUrlPrefKey);
+    if (saved != null && saved.trim().isNotEmpty) {
+      _activeApiBaseUrl = normalizeBaseUrl(saved);
+    }
+  } catch (_) {
+    // No stored override — keep the compile-time default.
+  }
+}
+
+/// Point the app at a different backend and remember it across restarts.
+Future<void> setApiBaseUrl(String url) async {
+  _activeApiBaseUrl = normalizeBaseUrl(url);
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(apiBaseUrlPrefKey, _activeApiBaseUrl);
+  } catch (_) {}
+}
+
+/// Drop the override and fall back to the build-time default.
+Future<void> resetApiBaseUrl() async {
+  _activeApiBaseUrl = normalizeBaseUrl(defaultApiBaseUrl);
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(apiBaseUrlPrefKey);
+  } catch (_) {}
+}
 
 class ApiClient {
   static const _accessKey = 'access_token';
@@ -119,6 +162,23 @@ class ApiClient {
     } catch (_) {}
     await clearTokens();
     return false;
+  }
+
+  /// Probe the currently configured server. Returns a human-readable result;
+  /// used by the in-app server settings so users can fix a wrong URL without
+  /// rebuilding the app.
+  Future<String> checkConnection() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$apiBaseUrl/health/'))
+          .timeout(const Duration(seconds: 12));
+      if (response.statusCode == 200) {
+        return 'Connected to $apiBaseUrl';
+      }
+      return 'Server replied HTTP ${response.statusCode}';
+    } catch (_) {
+      return 'Cannot reach $apiBaseUrl';
+    }
   }
 
   Future<List<int>> getBytes(String path) async {

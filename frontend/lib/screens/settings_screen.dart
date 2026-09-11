@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/api.dart';
 import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -29,7 +30,97 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _matchReminders = prefs.getBool('match_reminders') ?? true;
       _soundEffects = prefs.getBool('sound_effects') ?? false;
       _language = prefs.getString('language') ?? 'English';
+      _apiUrl = apiBaseUrl;
     });
+  }
+
+  String _apiUrl = '';
+
+  /// Let the user repoint the app at a different backend at runtime.
+  /// This is what makes a single web/APK build usable against localhost,
+  /// a LAN address, or a deployed server.
+  Future<void> _editServerUrl() async {
+    final controller = TextEditingController(text: apiBaseUrl);
+    String? probeResult;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: FCColors.surface,
+          title: const Text('Server URL', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Base URL of the FC ARENA API (include /api).',
+                style: TextStyle(fontSize: 12, color: FCColors.white50),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: const InputDecoration(
+                  hintText: 'https://example.com/api',
+                  prefixIcon: Icon(Icons.dns_outlined, size: 20),
+                ),
+              ),
+              if (probeResult != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  probeResult!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: probeResult!.startsWith('Connected') ? FCColors.accent : FCColors.red,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final msg = await apiClient.checkConnection();
+                setDialogState(() => probeResult = msg);
+              },
+              child: Text('TEST', style: TextStyle(color: FCColors.white50)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _resetServerUrl();
+              },
+              child: const Text('RESET', style: TextStyle(color: FCColors.white50)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text('CANCEL', style: TextStyle(color: FCColors.white50)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final value = controller.text.trim();
+                if (value.isEmpty) return;
+                await setApiBaseUrl(value);
+                if (mounted) setState(() => _apiUrl = apiBaseUrl);
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FCColors.accent,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('SAVE'),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+  }
+
+  Future<void> _resetServerUrl() async {
+    await resetApiBaseUrl();
+    if (mounted) setState(() => _apiUrl = apiBaseUrl);
   }
 
   Future<void> _save(String key, dynamic value) async {
@@ -54,6 +145,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             setState(() => _darkMode = v);
             _save('dark_mode', v);
           }),
+          _divider(),
+          _sectionHeader('SERVER'),
+          _actionTile(
+            Icons.dns_outlined,
+            'API Server',
+            _apiUrl.isEmpty ? apiBaseUrl : _apiUrl,
+            hasCustomApiBaseUrl ? 'Custom' : 'Default',
+            _editServerUrl,
+          ),
           _divider(),
           _sectionHeader('NOTIFICATIONS'),
           _toggleTile(Icons.notifications, 'Push Notifications', 'Receive match updates', _notifications, (v) {
@@ -133,6 +233,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onChanged: onChanged,
         ),
       ]),
+    );
+  }
+
+  Widget _actionTile(IconData icon, String title, String subtitle, String trailing, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(children: [
+          Icon(icon, color: FCColors.accent, size: 22),
+          const SizedBox(width: 14),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: const TextStyle(fontSize: 15, color: Colors.white)),
+            Text(subtitle, style: TextStyle(fontSize: 12, color: FCColors.white30), maxLines: 1, overflow: TextOverflow.ellipsis),
+          ])),
+          Text(trailing, style: TextStyle(fontSize: 12, color: FCColors.white50)),
+          const SizedBox(width: 6),
+          Icon(Icons.chevron_right, color: FCColors.white30, size: 20),
+        ]),
+      ),
     );
   }
 

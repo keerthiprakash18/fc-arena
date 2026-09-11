@@ -2,6 +2,9 @@
 
 A full-stack esports league & tournament management platform: Flutter frontend + Django REST backend, with AI-assisted match result verification.
 
+> **Just want to run it?** See **[RUN.md](RUN.md)** for the backend + web + mobile startup guide.
+> For cloud deployment see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
 ## Features
 
 **Leagues & members**
@@ -86,6 +89,10 @@ venv/Scripts/python manage.py runserver 0.0.0.0:8000
 ```
 
 API root: `http://localhost:8000/api/` — auth via JSON Web Tokens at `POST /auth/login/`.
+Health probe: `GET /api/health/` → `{"status": "ok", "database": true, "version": "1.0.0"}`.
+
+The backend binds `0.0.0.0:8000`, so the Android app on the same Wi-Fi can reach it
+at `http://<your-lan-ip>:8000/api`.
 
 ### Frontend
 
@@ -106,11 +113,16 @@ flutter build web --dart-define=API_BASE_URL=http://localhost:8000/api
 ## QA
 
 ```bash
-cd backend && venv/Scripts/python manage.py check   # backend sanity
-cd frontend && flutter analyze                       # 0 issues expected
-cd frontend && flutter test                          # widget tests (splash → onboarding, skip-onboarding)
+cd backend && venv/Scripts/python.exe manage.py check        # backend sanity
+cd backend && venv/Scripts/python.exe manage.py test tests   # ~90 API tests
+cd frontend && flutter analyze                               # 0 issues expected
+cd frontend && NO_PROXY=localhost,127.0.0.1 flutter test     # widget tests
 cd frontend && flutter build web --dart-define=API_BASE_URL=http://localhost:8000/api
 ```
+
+> `NO_PROXY` is needed because a set `HTTP_PROXY` intercepts the local
+> `flutter_tester` socket. The backend suite needs the DB user to have
+> `CREATEDB`: `psql -U postgres -c "ALTER ROLE fc_arena_user CREATEDB;"`.
 
 ## Demo users
 
@@ -121,6 +133,9 @@ cd frontend && flutter build web --dart-define=API_BASE_URL=http://localhost:800
 
 ## Key design notes
 
+- **Server URL is runtime-configurable**: `API_BASE_URL` sets the build-time default,
+  but the login screen (⚙ icon) and *Settings → Server* let you repoint the app at
+  localhost, a LAN IP, or a deployed host — no rebuild needed.
 - **Verification is credit-free**: OCR runs locally, so no AI API credits are consumed.
 - **Match → season is indirect**: `Match → tournament → season` (no season FK on matches).
 - **Leaderboards/statistics/standings** accept `?season_id=`; omit = all-time.

@@ -25,3 +25,18 @@ frontend/android/app/*.jks
 *.iml
 Thumbs.db
 .DS_Store
+
+# Flutter tool state
+.flutter_tool_state
+**/.flutter_tool_state
+
+# Android build output
+frontend/android/build/
+
+# Built binaries — reproducible via `flutter build`; publish releases on GitHub
+# instead of committing ~50MB files.
+*.apk
+*.aab
+
+# Local project/assistant tooling state
+.workbuddy-ai/

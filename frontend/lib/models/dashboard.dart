@@ -1,48 +1,78 @@
+// ============================================================
+// FC ARENA — LEAGUE / TOURNAMENT OVERVIEW
+// ============================================================
+
 class LeagueOverview {
   final Map<String, dynamic> league;
   final Map<String, dynamic> counts;
   final Map<String, dynamic> performance;
   final Map<String, dynamic>? leaders;
 
-  LeagueOverview({
+  const LeagueOverview({
     required this.league,
     required this.counts,
     required this.performance,
     this.leaders,
   });
 
-  factory LeagueOverview.fromJson(Map<String, dynamic> json) => LeagueOverview(
-    league: json['league'] ?? {},
-    counts: json['counts'] ?? {},
-    performance: json['performance'] ?? {},
-    leaders: json['leaders'],
-  );
+  factory LeagueOverview.fromJson(Map<String, dynamic> json) {
+    return LeagueOverview(
+      league: _map(json['league']),
+      counts: _map(json['counts']),
+      performance: _map(json['performance']),
+      leaders: json['leaders'] is Map
+          ? Map<String, dynamic>.from(json['leaders'])
+          : null,
+    );
+  }
 
-  String get leagueName => league['name'] ?? '';
-  String get leagueCode => league['code'] ?? '';
-  int get membersCount => counts['members'] ?? 0;
-  int get tournamentsCount => counts['tournaments'] ?? 0;
-  int get matchesTotal => counts['matches_total'] ?? 0;
-  int get matchesVerified => counts['matches_verified'] ?? 0;
-  int get pendingReviews => counts['pending_verification_reviews'] ?? 0;
-  int get openDisputes => counts['open_disputes'] ?? 0;
-  int get totalGoals => performance['total_goals'] ?? 0;
-  double get avgGoalsPerMatch => (performance['avg_goals_per_verified_match'] ?? 0).toDouble();
-  String get leaderUsername => leaders?['standings_leader']?['username'] ?? '-';
-  int get leaderPoints => leaders?['standings_leader']?['points'] ?? 0;
-  String get topScorerUsername => leaders?['top_scorer']?['username'] ?? '-';
-  int get topScorerGoals => leaders?['top_scorer']?['goals'] ?? 0;
+  String get leagueName => _string(league['name']);
+  String get leagueCode => _string(league['code']);
+
+  int get membersCount => _int(counts['members']);
+  int get tournamentsCount => _int(counts['tournaments']);
+  int get matchesTotal => _int(counts['matches_total']);
+  int get matchesVerified => _int(counts['matches_verified']);
+
+  int get pendingReviews =>
+      _int(counts['pending_verification_reviews']);
+
+  int get openDisputes =>
+      _int(counts['open_disputes']);
+
+  int get totalGoals =>
+      _int(performance['total_goals']);
+
+  double get avgGoalsPerMatch =>
+      _double(performance['avg_goals_per_verified_match']);
+
+  String get leaderUsername =>
+      _nestedString(leaders, 'standings_leader', 'username', '-');
+
+  int get leaderPoints =>
+      _nestedInt(leaders, 'standings_leader', 'points');
+
+  String get topScorerUsername =>
+      _nestedString(leaders, 'top_scorer', 'username', '-');
+
+  int get topScorerGoals =>
+      _nestedInt(leaders, 'top_scorer', 'goals');
 }
+
+
+// ============================================================
+// FC ARENA — NOTIFICATIONS
+// ============================================================
 
 class NotificationItem {
   final int id;
   final String type;
   final String title;
   final String message;
-  bool isRead;
+  final bool isRead;
   final String createdAt;
 
-  NotificationItem({
+  const NotificationItem({
     required this.id,
     required this.type,
     required this.title,
@@ -51,35 +81,55 @@ class NotificationItem {
     required this.createdAt,
   });
 
-  NotificationItem copyWith({bool? isRead}) => NotificationItem(
-    id: id, type: type, title: title, message: message,
-    isRead: isRead ?? this.isRead, createdAt: createdAt,
-  );
+  NotificationItem copyWith({
+    bool? isRead,
+  }) {
+    return NotificationItem(
+      id: id,
+      type: type,
+      title: title,
+      message: message,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt,
+    );
+  }
 
-  factory NotificationItem.fromJson(Map<String, dynamic> json) => NotificationItem(
-    id: json['id'] ?? 0,
-    type: json['notification_type'] ?? '',
-    title: json['title'] ?? '',
-    message: json['message'] ?? '',
-    isRead: json['is_read'] ?? false,
-    createdAt: json['created_at'] ?? '',
-  );
+  factory NotificationItem.fromJson(Map<String, dynamic> json) {
+    return NotificationItem(
+      id: _int(json['id']),
+      type: _string(json['notification_type']),
+      title: _string(json['title']),
+      message: _string(json['message']),
+      isRead: _bool(json['is_read']),
+      createdAt: _string(json['created_at']),
+    );
+  }
 }
+
+
+// ============================================================
+// FC ARENA — AI VERIFICATION TASK
+// ============================================================
 
 class VerificationTask {
   final int id;
   final int matchId;
   final String status;
+
   final String? aiProvider;
-  final dynamic aiConfidenceScore;
+  final double? aiConfidenceScore;
+
   final dynamic aiExtractedData;
+
   final String? adminNotes;
   final String? verifiedByName;
   final String? evidenceFile;
+
   final List<ExtractionResultItem> results;
+
   final String createdAt;
 
-  VerificationTask({
+  const VerificationTask({
     required this.id,
     required this.matchId,
     required this.status,
@@ -93,32 +143,64 @@ class VerificationTask {
     required this.createdAt,
   });
 
-  factory VerificationTask.fromJson(Map<String, dynamic> json) => VerificationTask(
-    id: json['id'] ?? 0,
-    matchId: json['match'] ?? 0,
-    status: json['status'] ?? '',
-    aiProvider: json['ai_provider'],
-    aiConfidenceScore: json['ai_confidence_score'],
-    aiExtractedData: json['ai_extracted_data'],
-    adminNotes: json['admin_notes'],
-    verifiedByName: json['verified_by_name'],
-    evidenceFile: json['evidence_file'],
-    results: (json['results'] as List? ?? [])
-        .map((r) => ExtractionResultItem.fromJson(r))
-        .toList(),
-    createdAt: json['created_at'] ?? '',
-  );
+  factory VerificationTask.fromJson(Map<String, dynamic> json) {
+    final rawResults = json['results'];
+
+    return VerificationTask(
+      id: _int(json['id']),
+      matchId: _int(json['match'] ?? json['match_id']),
+      status: _string(json['status']),
+
+      aiProvider: json['ai_provider']?.toString(),
+
+      aiConfidenceScore:
+          _nullableDouble(json['ai_confidence_score']),
+
+      aiExtractedData:
+          json['ai_extracted_data'],
+
+      adminNotes:
+          json['admin_notes']?.toString(),
+
+      verifiedByName:
+          json['verified_by_name']?.toString(),
+
+      evidenceFile:
+          json['evidence_file']?.toString(),
+
+      results: rawResults is List
+          ? rawResults
+              .whereType<Map>()
+              .map(
+                (item) => ExtractionResultItem.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .toList()
+          : const [],
+
+      createdAt: _string(json['created_at']),
+    );
+  }
 }
+
+
+// ============================================================
+// FC ARENA — AI EXTRACTION RESULT
+// ============================================================
 
 class ExtractionResultItem {
   final int id;
   final String fieldName;
   final String fieldValue;
+
   final double? confidence;
+
   final String? sourceRegion;
+
   final bool isReliable;
 
-  ExtractionResultItem({
+  const ExtractionResultItem({
     required this.id,
     required this.fieldName,
     required this.fieldValue,
@@ -127,26 +209,48 @@ class ExtractionResultItem {
     this.isReliable = false,
   });
 
-  factory ExtractionResultItem.fromJson(Map<String, dynamic> json) => ExtractionResultItem(
-    id: json['id'] ?? 0,
-    fieldName: json['field_name'] ?? '',
-    fieldValue: json['field_value'] ?? '',
-    confidence: (json['confidence'] as num?)?.toDouble(),
-    sourceRegion: json['source_region'],
-    isReliable: json['is_reliable'] ?? false,
-  );
+  factory ExtractionResultItem.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return ExtractionResultItem(
+      id: _int(json['id']),
+
+      fieldName:
+          _string(json['field_name']),
+
+      fieldValue:
+          _string(json['field_value']),
+
+      confidence:
+          _nullableDouble(json['confidence']),
+
+      sourceRegion:
+          json['source_region']?.toString(),
+
+      isReliable:
+          _bool(json['is_reliable']),
+    );
+  }
 }
+
+
+// ============================================================
+// FC ARENA — ADMIN REVIEW ITEM
+// ============================================================
 
 class AdminReviewItem {
   final int taskId;
   final int matchId;
+
   final String homeUsername;
   final String awayUsername;
+
   final double? confidence;
+
   final String status;
   final String createdAt;
 
-  AdminReviewItem({
+  const AdminReviewItem({
     required this.taskId,
     required this.matchId,
     required this.homeUsername,
@@ -156,20 +260,199 @@ class AdminReviewItem {
     required this.createdAt,
   });
 
-  factory AdminReviewItem.fromJson(Map<String, dynamic> json) => AdminReviewItem(
-    taskId: json['task_id'] ?? 0,
-    matchId: json['match_id'] ?? 0,
-    homeUsername: json['home_user'] ?? '',
-    awayUsername: json['away_user'] ?? '',
-    confidence: (json['confidence'] as num?)?.toDouble(),
-    status: json['status'] ?? '',
-    createdAt: json['created_at'] ?? '',
-  );
+  factory AdminReviewItem.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return AdminReviewItem(
+      taskId: _int(json['task_id']),
+      matchId: _int(json['match_id']),
+
+      homeUsername:
+          _string(json['home_user']),
+
+      awayUsername:
+          _string(json['away_user']),
+
+      confidence:
+          _nullableDouble(json['confidence']),
+
+      status:
+          _string(json['status']),
+
+      createdAt:
+          _string(json['created_at']),
+    );
+  }
 }
+
+
+// ============================================================
+// FC ARENA — PENDING REVIEWS
+// ============================================================
 
 class PendingReviewsData {
   final List<AdminReviewItem> reviews;
   final List<Map<String, dynamic>> disputes;
 
-  PendingReviewsData({required this.reviews, required this.disputes});
+  const PendingReviewsData({
+    required this.reviews,
+    required this.disputes,
+  });
+
+  factory PendingReviewsData.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final rawReviews = json['reviews'];
+    final rawDisputes = json['disputes'];
+
+    return PendingReviewsData(
+      reviews: rawReviews is List
+          ? rawReviews
+              .whereType<Map>()
+              .map(
+                (item) => AdminReviewItem.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .toList()
+          : const [],
+
+      disputes: rawDisputes is List
+          ? rawDisputes
+              .whereType<Map>()
+              .map(
+                (item) => Map<String, dynamic>.from(item),
+              )
+              .toList()
+          : const [],
+    );
+  }
+}
+
+
+// ============================================================
+// FC ARENA — SAFE JSON HELPERS
+// ============================================================
+
+Map<String, dynamic> _map(dynamic value) {
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
+  }
+
+  return <String, dynamic>{};
+}
+
+
+String _string(dynamic value, [String fallback = '']) {
+  if (value == null) {
+    return fallback;
+  }
+
+  return value.toString();
+}
+
+
+int _int(dynamic value, [int fallback = 0]) {
+  if (value is int) {
+    return value;
+  }
+
+  if (value is num) {
+    return value.toInt();
+  }
+
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
+
+double _double(dynamic value, [double fallback = 0.0]) {
+  if (value is num) {
+    return value.toDouble();
+  }
+
+  return double.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
+
+double? _nullableDouble(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+
+  if (value is num) {
+    return value.toDouble();
+  }
+
+  return double.tryParse(value.toString());
+}
+
+
+bool _bool(dynamic value, [bool fallback = false]) {
+  if (value is bool) {
+    return value;
+  }
+
+  if (value is num) {
+    return value != 0;
+  }
+
+  if (value is String) {
+    final normalized = value.toLowerCase().trim();
+
+    if (normalized == 'true' ||
+        normalized == '1' ||
+        normalized == 'yes') {
+      return true;
+    }
+
+    if (normalized == 'false' ||
+        normalized == '0' ||
+        normalized == 'no') {
+      return false;
+    }
+  }
+
+  return fallback;
+}
+
+
+String _nestedString(
+  Map<String, dynamic>? parent,
+  String objectKey,
+  String fieldKey,
+  String fallback,
+) {
+  if (parent == null) {
+    return fallback;
+  }
+
+  final object = parent[objectKey];
+
+  if (object is Map) {
+    return _string(
+      object[fieldKey],
+      fallback,
+    );
+  }
+
+  return fallback;
+}
+
+
+int _nestedInt(
+  Map<String, dynamic>? parent,
+  String objectKey,
+  String fieldKey,
+) {
+  if (parent == null) {
+    return 0;
+  }
+
+  final object = parent[objectKey];
+
+  if (object is Map) {
+    return _int(object[fieldKey]);
+  }
+
+  return 0;
 }

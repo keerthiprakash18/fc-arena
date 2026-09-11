@@ -5,12 +5,17 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    isStaff = serializers.BooleanField(source='is_staff', read_only=True)
+    isSuperuser = serializers.BooleanField(source='is_superuser', read_only=True)
+    dateJoined = serializers.DateTimeField(source='date_joined', read_only=True)
+
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name',
                   'game_uid', 'game_in_game_name', 'phone_number',
-                  'profile_photo', 'date_of_birth']
-        read_only_fields = ['id']
+                  'profile_photo', 'date_of_birth',
+                  'isStaff', 'isSuperuser', 'dateJoined']
+        read_only_fields = ['id', 'isStaff', 'isSuperuser', 'dateJoined']
 
 
 class RegisterSerializer(serializers.ModelSerializer):

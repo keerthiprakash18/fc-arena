@@ -1,16 +1,34 @@
 import os
+import sys
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
 import urllib.parse
+
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 for _env_key in ('EXPLABS_API_KEY', 'EXPLABS_BASE_URL', 'EXPLABS_MODEL', 'OCR_PROVIDER'):
     os.environ.setdefault(_env_key, config(_env_key, default=''))
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
 DEBUG = config('DEBUG', default=True, cast=bool)
+
+# Refuse to boot production with a placeholder secret. A shared, guessable
+# SECRET_KEY lets anyone forge session cookies and JWTs.
+_INSECURE_SECRET_KEYS = {
+    '',
+    'django-insecure-change-me',
+    'dev-secret-key-change-in-production',
+    'change-me-to-a-long-random-value',
+}
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
+if not DEBUG and (SECRET_KEY in _INSECURE_SECRET_KEYS or len(SECRET_KEY) < 32):
+    raise ImproperlyConfigured(
+        'SECRET_KEY must be a long random value when DEBUG=False. '
+        'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(50))"'
+    )
+
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
 # CORS
@@ -155,6 +173,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
+
+# Under test, PBKDF2 makes every create_user() call ~200ms and turns a few
+# hundred tests into an eight-minute wait. A fast hasher keeps the suite snappy
+# without affecting production.
+if 'test' in sys.argv:
+    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
