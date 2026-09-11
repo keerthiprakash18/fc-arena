@@ -62,6 +62,47 @@ class ApiService {
     return [];
   }
 
+  /// Create a league. The creator is enrolled as its LEAGUE_OWNER server-side.
+  Future<Map<String, dynamic>> createLeague({
+    required String name,
+    String description = '',
+  }) async {
+    // The backend requires a unique slug, so derive one from the name and add a
+    // numeric suffix if that slug is already taken.
+    final base = _slugify(name);
+    for (var attempt = 0; attempt < 20; attempt++) {
+      final slug = attempt == 0 ? base : '$base-$attempt';
+      try {
+        return await _client.post('/leagues/', {
+          'name': name,
+          'slug': slug,
+          'description': description,
+        });
+      } on ApiException catch (e) {
+        final slugTaken =
+            e.statusCode == 400 && e.message.toLowerCase().contains('slug');
+        if (!slugTaken) rethrow;
+      }
+    }
+    throw ApiException(400, 'Could not find an available name for that league.');
+  }
+
+  /// Join an existing league using its FC-XXXXXX invite code.
+  Future<Map<String, dynamic>> joinLeague(String code) async {
+    return await _client.post('/leagues/join/', {
+      'league_code': code.trim().toUpperCase(),
+    });
+  }
+
+  String _slugify(String value) {
+    final slug = value
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s-]'), '')
+        .trim()
+        .replaceAll(RegExp(r'[\s-]+'), '-');
+    return slug.isEmpty ? 'league' : slug;
+  }
+
   // ─── Dashboard ────────────────────────────────────────
   Future<LeagueOverview> getLeagueOverview(int leagueId) async {
     final data = await _client.get('/leagues/$leagueId/dashboard/overview/');

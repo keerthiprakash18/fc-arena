@@ -29,6 +29,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   LeagueOverview? _overview;
   bool _loading = true;
+  bool _noLeagues = false;
   String? _error;
   int _unread = 0;
   final _api = ApiService(apiClient);
@@ -51,15 +52,203 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final leagues = await _api.getMyLeagues();
       if (leagues.isEmpty) {
-        setState(() { _loading = false; _error = 'No leagues found'; });
+        // A brand-new account has no leagues yet — offer create/join rather
+        // than showing an error the user can never clear.
+        setState(() {
+          _loading = false;
+          _noLeagues = true;
+          _error = null;
+          _overview = null;
+        });
         return;
       }
       final leagueId = leagues.first['id'];
       final overview = await _api.getLeagueOverview(leagueId);
-      setState(() { _overview = overview; _loading = false; });
+      setState(() {
+        _overview = overview;
+        _loading = false;
+        _noLeagues = false;
+        _error = null;
+      });
     } catch (e) {
       setState(() { _loading = false; _error = e.toString(); });
     }
+  }
+
+  Future<void> _showCreateLeagueDialog() async {
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+    var busy = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: FCColors.surface,
+          title: const Text('Create a league', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'League name',
+                  hintText: 'e.g. FC Arena Tamil',
+                  prefixIcon: Icon(Icons.emoji_events_outlined, size: 20),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descController,
+                style: const TextStyle(color: Colors.white),
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Description (optional)',
+                  prefixIcon: Icon(Icons.notes_outlined, size: 20),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: busy ? null : () => Navigator.pop(dialogContext),
+              child: Text('CANCEL', style: TextStyle(color: FCColors.white50)),
+            ),
+            ElevatedButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      final name = nameController.text.trim();
+                      if (name.isEmpty) return;
+                      setDialogState(() => busy = true);
+                      try {
+                        await _api.createLeague(
+                          name: name,
+                          description: descController.text.trim(),
+                        );
+                        if (dialogContext.mounted) Navigator.pop(dialogContext);
+                        await _loadOverview();
+                        if (mounted) _toast('League created');
+                      } catch (e) {
+                        setDialogState(() => busy = false);
+                        if (dialogContext.mounted) {
+                          _toast(_readableError(e), isError: true);
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FCColors.accent,
+                foregroundColor: Colors.white,
+              ),
+              child: busy
+                  ? const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('CREATE'),
+            ),
+          ],
+        ),
+      ),
+    );
+    nameController.dispose();
+    descController.dispose();
+  }
+
+  Future<void> _showJoinLeagueDialog() async {
+    final codeController = TextEditingController();
+    var busy = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: FCColors.surface,
+          title: const Text('Join a league', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Enter the invite code you were given (looks like FC-7SXVJS).',
+                style: TextStyle(fontSize: 12, color: FCColors.white50),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: codeController,
+                autofocus: true,
+                textCapitalization: TextCapitalization.characters,
+                style: const TextStyle(color: Colors.white, letterSpacing: 2),
+                decoration: const InputDecoration(
+                  hintText: 'FC-XXXXXX',
+                  prefixIcon: Icon(Icons.vpn_key_outlined, size: 20),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: busy ? null : () => Navigator.pop(dialogContext),
+              child: Text('CANCEL', style: TextStyle(color: FCColors.white50)),
+            ),
+            ElevatedButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      final code = codeController.text.trim();
+                      if (code.isEmpty) return;
+                      setDialogState(() => busy = true);
+                      try {
+                        await _api.joinLeague(code);
+                        if (dialogContext.mounted) Navigator.pop(dialogContext);
+                        await _loadOverview();
+                        if (mounted) _toast('Joined league');
+                      } catch (e) {
+                        setDialogState(() => busy = false);
+                        if (dialogContext.mounted) {
+                          _toast(_readableError(e), isError: true);
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FCColors.accent,
+                foregroundColor: Colors.white,
+              ),
+              child: busy
+                  ? const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('JOIN'),
+            ),
+          ],
+        ),
+      ),
+    );
+    codeController.dispose();
+  }
+
+  /// Turn an ApiException into something a user can act on.
+  String _readableError(Object error) {
+    if (error is ApiException) {
+      final msg = error.message;
+      if (msg.contains('already a member')) return 'You are already in that league.';
+      if (msg.contains('Invalid league code')) return 'That invite code is not valid.';
+      return msg;
+    }
+    return error.toString();
+  }
+
+  void _toast(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? FCColors.red : FCColors.accent,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   @override
@@ -98,9 +287,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
-          : _error != null
-              ? ErrorRetry(message: _error!, onRetry: _loadOverview)
-              : RefreshIndicator(
+          : _noLeagues
+              ? _buildNoLeaguesView()
+              : _error != null
+                  ? ErrorRetry(message: _error!, onRetry: _loadOverview)
+                  : RefreshIndicator(
                   onRefresh: _loadOverview,
                   color: FCColors.accent,
                   child: ListView(
@@ -124,6 +315,73 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
+    );
+  }
+
+  /// Shown when the signed-in account belongs to no league yet.
+  Widget _buildNoLeaguesView() {
+    return RefreshIndicator(
+      onRefresh: _loadOverview,
+      color: FCColors.accent,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        children: [
+          const SizedBox(height: 48),
+          Center(
+            child: Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                gradient: FCGradients.accent,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(Icons.emoji_events, size: 44, color: Colors.white),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Welcome to FC ARENA',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'You are not in a league yet. Create one and share its invite code with your players, or join a league using a code you were given.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, height: 1.5, color: FCColors.white50),
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _showCreateLeagueDialog,
+              icon: const Icon(Icons.add_circle_outline, size: 20),
+              label: const Text('CREATE A LEAGUE',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FCColors.accent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: _showJoinLeagueDialog,
+              icon: const Icon(Icons.vpn_key_outlined, size: 20),
+              label: const Text('JOIN WITH INVITE CODE',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: FCColors.accent,
+                side: BorderSide(color: FCColors.accent.withValues(alpha: 0.5)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -62,16 +62,24 @@ backend/
   notifications/     user notifications, preferences
   disputes/          match disputes
   awards/            awards
-  headtohead/        head-to-head comparisons
-backend/
+  dashboard/         league + platform aggregate views
+  ratings/           per-league player ratings + history
+  records/           league records
+  auditlog/          audit trail
+  tests/             API test suite (manage.py test tests)
+
+frontend/
   lib/
-    config/          ApiClient (tokens, HTTP)
+    config/          ApiClient (tokens, HTTP, runtime server URL)
     models/          data models (match, tournament, category, season…)
     providers/       AuthProvider
     screens/         all screens
     services/        ApiService (typed API methods)
     main.dart        app entry (SplashScreen → Onboarding/Login)
 ```
+
+Head-to-head comparison is computed client-side in `ApiService.getHeadToHead`
+from league statistics + matches; there is no dedicated backend app.
 
 ## Setup
 
@@ -117,6 +125,7 @@ cd backend && venv/Scripts/python.exe manage.py check        # backend sanity
 cd backend && venv/Scripts/python.exe manage.py test tests   # ~90 API tests
 cd frontend && flutter analyze                               # 0 issues expected
 cd frontend && NO_PROXY=localhost,127.0.0.1 flutter test     # widget tests
+python smoke_test.py                                         # every button, end-to-end
 cd frontend && flutter build web --dart-define=API_BASE_URL=http://localhost:8000/api
 ```
 
@@ -124,12 +133,17 @@ cd frontend && flutter build web --dart-define=API_BASE_URL=http://localhost:800
 > `flutter_tester` socket. The backend suite needs the DB user to have
 > `CREATEDB`: `psql -U postgres -c "ALTER ROLE fc_arena_user CREATEDB;"`.
 
-## Demo users
+## Accounts
+
+The database ships empty — there is no seeded demo data. One admin account is
+present so you can sign in immediately:
 
 | User | Password | Role |
 |---|---|---|
-| `luciferkp` | `keerthi@1518` | league 1 owner (invite code `FC-7SXVJS`) |
-| `player2` | `testpass123` | league member |
+| `luciferkp` | `keerthi@1518` | superuser / league owner |
+
+Create your first league in-app, then invite others with its `FC-XXXXXX` code.
+**Change this password** before exposing the app publicly.
 
 ## Key design notes
 

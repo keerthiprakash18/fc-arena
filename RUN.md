@@ -191,6 +191,7 @@ cd backend   && venv/Scripts/python.exe manage.py check        # config sanity
 cd backend   && venv/Scripts/python.exe manage.py test tests   # 90 API tests, ~3s
 cd frontend  && flutter analyze                                # expect: No issues found
 cd frontend  && flutter test                                   # splash / onboarding widget tests
+python smoke_test.py                                           # every button, end-to-end
 ```
 
 > **`flutter test` needs a proxy bypass in this environment.** `HTTP_PROXY` is
@@ -199,6 +200,24 @@ cd frontend  && flutter test                                   # splash / onboar
 > ```bash
 > NO_PROXY=localhost,127.0.0.1 flutter test
 > ```
+
+### End-to-end smoke test
+
+`smoke_test.py` drives a **running backend** through every action the app's
+buttons perform — create/join league, the full match lifecycle through
+verification, tournaments, categories, awards, notifications and member admin.
+Use it to prove a build works before shipping:
+
+```bash
+python smoke_test.py                                   # http://localhost:8000/api
+python smoke_test.py https://your-api.example.com/api  # a deployment
+python smoke_test.py http://localhost:8000/api user pass
+```
+
+It exits non-zero if any step fails and prints a per-step PASS/FAIL list.
+
+> It creates real data (a league named "Smoke Test League"), so point it at a
+> dev or staging backend rather than production.
 
 ### Backend tests
 

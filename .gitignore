@@ -40,3 +40,6 @@ frontend/android/build/
 
 # Local project/assistant tooling state
 .workbuddy-ai/
+
+# Local database backups
+.backups/
