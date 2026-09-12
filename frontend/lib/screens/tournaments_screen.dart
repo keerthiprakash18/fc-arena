@@ -162,7 +162,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(t.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(height: 2),
-                Text('${t.formatLabel} â€¢ ${t.code}', style: TextStyle(fontSize: 12, color: FCColors.white50)),
+                Text('${t.formatLabel} • ${t.code}', style: TextStyle(fontSize: 12, color: FCColors.white50)),
               ]),
             ),
             Container(
@@ -180,13 +180,13 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
             if (t.entryFee > 0) ...[
               Icon(Icons.monetization_on, size: 14, color: Colors.amber.withValues(alpha: 0.5)),
               const SizedBox(width: 4),
-              Text('â‚¹${t.entryFee.toStringAsFixed(0)} entry', style: TextStyle(fontSize: 12, color: FCColors.white50)),
+              Text('₹${t.entryFee.toStringAsFixed(0)} entry', style: TextStyle(fontSize: 12, color: FCColors.white50)),
             ],
             if (t.prizePool > 0) ...[
               const SizedBox(width: 12),
               Icon(Icons.emoji_events, size: 14, color: Colors.amber),
               const SizedBox(width: 4),
-              Text('â‚¹${t.prizePool.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600)),
+              Text('₹${t.prizePool.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600)),
             ],
           ]),
           const SizedBox(height: 8),

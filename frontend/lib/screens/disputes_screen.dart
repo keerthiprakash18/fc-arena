@@ -95,7 +95,7 @@ class _DisputesScreenState extends State<DisputesScreen> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(
-              child: Text('Match #${dispute.matchId} â€” ${dispute.reasonLabel}',
+              child: Text('Match #${dispute.matchId} — ${dispute.reasonLabel}',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
             Container(

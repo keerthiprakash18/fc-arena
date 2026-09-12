@@ -154,7 +154,7 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
         Row(children: [
           const Icon(Icons.gavel, size: 16, color: Colors.red),
           const SizedBox(width: 8),
-          Text('Match #${dispute['match_id']} â€” raised by ${dispute['raised_by']}',
+          Text('Match #${dispute['match_id']} — raised by ${dispute['raised_by']}',
             style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
         ]),
         const SizedBox(height: 6),

@@ -11,6 +11,7 @@ import '../models/tournament.dart';
 import '../models/award.dart';
 import '../models/category.dart';
 import '../models/team.dart';
+import '../models/group.dart';
 
 class ApiService {
   final ApiClient _client;
@@ -529,6 +530,39 @@ class ApiService {
     return [];
   }
 
+  // ─── Group stage ─────────────────────────────────────
+  /// Per-group tables. Built from verified matches only, so an all-zero row
+  /// means the group has not been played yet.
+  Future<List<GroupTable>> getGroupStandings(int leagueId, int tournamentId) async {
+    final data = await _client
+        .get('/leagues/$leagueId/tournaments/$tournamentId/groups/standings/');
+    final groups = data['groups'];
+    if (groups is List) {
+      return groups
+          .map((g) => GroupTable.fromJson((g as Map).cast<String, dynamic>()))
+          .toList();
+    }
+    return [];
+  }
+
+  /// Redistribute registered participants across groups. Replaces any draw.
+  Future<Map<String, dynamic>> drawGroups(int leagueId, int tournamentId,
+      {int? groupCount}) async {
+    return _client.post(
+      '/leagues/$leagueId/tournaments/$tournamentId/groups/draw/',
+      {'group_count': ?groupCount},
+    );
+  }
+
+  /// Promote the top finishers of each group into a knockout round.
+  Future<Map<String, dynamic>> advanceGroupWinners(int leagueId, int tournamentId,
+      {int? perGroup}) async {
+    return _client.post(
+      '/leagues/$leagueId/tournaments/$tournamentId/groups/advance/',
+      {'per_group': ?perGroup},
+    );
+  }
+
   // ─── Awards ──────────────────────────────────────────
   Future<List<Award>> getAwards(int leagueId, {int? seasonId, int? tournamentId}) async {
     String url = '/leagues/$leagueId/awards/';
@@ -563,14 +597,29 @@ class ApiService {
     return Award.fromJson(data);
   }
 
+  /// Rebuild the league's automatic awards. Organizer overrides are preserved
+  /// server-side — only source='AUTO' rows are replaced.
+  Future<Map<String, dynamic>> computeAwards(int leagueId,
+      {int? seasonId, int? tournamentId}) async {
+    return _client.post('/leagues/$leagueId/awards/compute/', {
+      'season_id': ?seasonId,
+      'tournament_id': ?tournamentId,
+    });
+  }
+
   // ─── Records ─────────────────────────────────────────
   Future<List<LeagueRecord>> getRecords(int leagueId) async {
-    final data = await _client.getList('/leagues/$leagueId/records/');
+    final data = await _client.getListAll('/leagues/$leagueId/records/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((r) => LeagueRecord.fromJson(r)).toList();
     }
     return [];
+  }
+
+  /// Rebuild the league's records from its verified matches. Owner/admin only.
+  Future<Map<String, dynamic>> recomputeRecords(int leagueId) async {
+    return _client.post('/leagues/$leagueId/records/recompute/', {});
   }
 
   // ─── Ratings ─────────────────────────────────────────

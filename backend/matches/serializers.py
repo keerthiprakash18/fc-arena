@@ -14,7 +14,7 @@ _MATCH_PARTICIPANT_FIELDS = (
     'home_team_short_name', 'away_team_short_name',
     'home_team_logo', 'away_team_logo',
     'home_display', 'away_display',
-    'round_number', 'round_name',
+    'round_number', 'round_name', 'round_type',
 )
 
 
@@ -36,12 +36,19 @@ class _MatchParticipantFieldsMixin(serializers.Serializer):
     # `round` id alone is not enough to lay out columns in order.
     round_number = serializers.SerializerMethodField()
     round_name = serializers.SerializerMethodField()
+    # A group round is not part of the knockout tree, so the bracket needs the
+    # type to tell the two apart and avoid drawing group columns as if they fed
+    # into the knockout rounds.
+    round_type = serializers.SerializerMethodField()
 
     def get_round_number(self, obj):
         return obj.round.round_number if obj.round_id else None
 
     def get_round_name(self, obj):
         return obj.round.name if obj.round_id else None
+
+    def get_round_type(self, obj):
+        return obj.round.round_type if obj.round_id else None
 
     def get_home_username(self, obj):
         return obj.home_user.username if obj.home_user_id else None
@@ -96,6 +103,7 @@ class MatchSerializer(_MatchParticipantFieldsMixin, serializers.ModelSerializer)
                   'away_team', 'away_team_name', 'away_team_short_name',
                   'away_team_logo',
                   'home_display', 'away_display', 'round_number', 'round_name',
+                  'round_type',
                   'is_team_match', 'venue',
                   'home_score', 'away_score', 'status', 'scheduled_at',
                   'played_at', 'verified_at', 'verified_by',
@@ -122,6 +130,7 @@ class MatchCreateSerializer(_MatchParticipantFieldsMixin, serializers.ModelSeria
                   'away_team', 'away_team_name', 'away_team_short_name',
                   'away_team_logo',
                   'home_display', 'away_display', 'round_number', 'round_name',
+                  'round_type',
                   'is_team_match', 'venue',
                   'home_score', 'away_score', 'status', 'scheduled_at',
                   'played_at', 'verified_at', 'verified_by',

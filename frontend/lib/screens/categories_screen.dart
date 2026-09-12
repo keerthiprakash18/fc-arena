@@ -168,7 +168,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(cat.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 2),
-            Text('${cat.minRating.toStringAsFixed(0)} â€“ ${cat.maxRating.toStringAsFixed(0)} rating', style: TextStyle(fontSize: 12, color: FCColors.white50)),
+            Text('${cat.minRating.toStringAsFixed(0)} – ${cat.maxRating.toStringAsFixed(0)} rating', style: TextStyle(fontSize: 12, color: FCColors.white50)),
           ])),
           Icon(Icons.chevron_right, color: color.withValues(alpha: 0.6)),
           const SizedBox(width: 6),

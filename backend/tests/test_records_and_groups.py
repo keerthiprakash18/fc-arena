@@ -418,6 +418,57 @@ class GroupStageTests(ApiTestCase):
         self.assertEqual(response.data['count'], 2)
         self.assertEqual(len(response.data['groups'][0]['standings']), 4)
 
+    # ── round labelling (the bracket depends on it) ─────────────────────────
+    def test_group_fixture_is_labelled_group_in_the_match_payload(self):
+        """The bracket must be able to tell a group round from a knockout one.
+
+        Without `round_type` the client would draw group columns as if they fed
+        into the knockout rounds.
+        """
+        tournament, _ = self._tournament(teams=4)
+        groups, _ = create_groups(tournament, 2)
+        group = groups[0]
+        members = [m.participant.team for m in group.members.select_related('participant')]
+        self._play_group_match(tournament, group, members[0], members[1], 1, 0)
+
+        self.authenticate(self.alice)
+        response = self.client.get(f'/api/leagues/{self.league_id}/matches/')
+
+        self.assertEqual(response.status_code, 200, response.data)
+        row = next(
+            m for m in response.data['results']
+            if m['tournament'] == tournament.id
+        )
+        self.assertEqual(row['round_type'], 'GROUP')
+        self.assertEqual(row['round_number'], group.group_number)
+
+    def test_advancement_fixture_is_not_labelled_group(self):
+        """After advancement the new round is knockout, so the bracket keeps it."""
+        tournament, _ = self._tournament(teams=4)
+        groups, _ = create_groups(tournament, 2)
+        group_a, group_b = groups
+        a_teams = [m.participant.team for m in group_a.members.select_related('participant')]
+        b_teams = [m.participant.team for m in group_b.members.select_related('participant')]
+        self._play_group_match(tournament, group_a, a_teams[0], a_teams[1], 3, 0)
+        self._play_group_match(tournament, group_b, b_teams[0], b_teams[1], 2, 0)
+        advance_group_winners(tournament, per_group=1)
+
+        self.authenticate(self.alice)
+        response = self.client.get(f'/api/leagues/{self.league_id}/matches/')
+
+        types = {
+            m['round_type'] for m in response.data['results']
+            if m['tournament'] == tournament.id
+        }
+        self.assertIn('KNOCKOUT', types)
+        self.assertIn('GROUP', types)
+        # Exactly one knockout fixture was created, and it is not a group round.
+        knockout = TournamentRound.objects.get(
+            tournament=tournament, round_type='KNOCKOUT'
+        )
+        final = Match.objects.get(tournament=tournament, round=knockout)
+        self.assertNotEqual(final.round.round_type, 'GROUP')
+
     # ── advancement ─────────────────────────────────────────────────────────
     def test_advance_creates_a_cross_group_knockout_round(self):
         tournament, _ = self._tournament(teams=4)

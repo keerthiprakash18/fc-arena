@@ -26,6 +26,9 @@ class Match {
   /// columns out in this order; null for ad-hoc fixtures with no round.
   final int? roundNumber;
   final String? roundName;
+  /// 'GROUP' for group-stage rounds, otherwise a knockout type. A group round
+  /// is not part of the bracket tree, so the bracket skips it.
+  final String? roundType;
   final int? homeScore;
   final int? awayScore;
   final String status;
@@ -57,6 +60,7 @@ class Match {
     this.venue = '',
     this.roundNumber,
     this.roundName,
+    this.roundType,
     this.homeScore,
     this.awayScore,
     required this.status,
@@ -89,6 +93,7 @@ class Match {
     venue: json['venue'] ?? '',
     roundNumber: (json['round_number'] as num?)?.toInt(),
     roundName: json['round_name'],
+    roundType: json['round_type'],
     homeScore: json['home_score'],
     awayScore: json['away_score'],
     status: json['status'] ?? 'SCHEDULED',

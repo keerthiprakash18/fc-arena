@@ -14,6 +14,13 @@ class Award {
   final String? awardedByName;
   final String awardedAt;
 
+  /// A recipient is either a player or a team. The API keeps `username` for
+  /// backward compatibility, but a team award needs to be labelled as a team
+  /// so the UI does not present a club as if it were a person.
+  final int? teamId;
+  final String? teamName;
+  final String? title;
+
   Award({
     required this.id,
     required this.leagueId,
@@ -27,6 +34,9 @@ class Award {
     required this.description,
     this.awardedByName,
     required this.awardedAt,
+    this.teamId,
+    this.teamName,
+    this.title,
   });
 
   factory Award.fromJson(Map<String, dynamic> json) => Award(
@@ -42,7 +52,21 @@ class Award {
     description: json['description'] ?? '',
     awardedByName: json['awarded_by'],
     awardedAt: json['awarded_at'] ?? '',
+    teamId: json['team'],
+    teamName: json['team_name'],
+    title: json['title'],
   );
+
+  /// True when the trophy went to a club rather than a person.
+  bool get isTeamHolder => teamId != null;
+
+  /// Who received it, preferring the team name for a club.
+  String get holderName {
+    if (teamName != null && teamName!.isNotEmpty) return teamName!;
+    return username;
+  }
+
+  bool get isManual => source == 'MANUAL';
 
   String get displayName => customName.isNotEmpty ? customName : awardTypeDisplay;
 
@@ -89,6 +113,11 @@ class LeagueRecord {
   final bool isCurrent;
   final Map<String, dynamic> metadata;
 
+  /// Records can be held by a player or a team. `username` still resolves to
+  /// whichever it is, but the UI needs to tell them apart.
+  final int? teamId;
+  final String? teamName;
+
   LeagueRecord({
     required this.id,
     required this.leagueId,
@@ -100,6 +129,8 @@ class LeagueRecord {
     required this.achievedAt,
     required this.isCurrent,
     required this.metadata,
+    this.teamId,
+    this.teamName,
   });
 
   factory LeagueRecord.fromJson(Map<String, dynamic> json) => LeagueRecord(
@@ -113,7 +144,15 @@ class LeagueRecord {
     achievedAt: json['achieved_at'] ?? '',
     isCurrent: json['is_current'] ?? true,
     metadata: json['metadata'] ?? {},
+    teamId: json['team'],
+    teamName: json['team_name'],
   );
+
+  bool get isTeamHolder => teamId != null;
+
+  /// Who holds the record, whether that is a club or a player.
+  String get holderName =>
+      (teamName != null && teamName!.isNotEmpty) ? teamName! : username;
 
   static const recordIcons = {
     'HIGHEST_RATING': Icons.star,

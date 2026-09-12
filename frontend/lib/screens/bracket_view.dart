@@ -60,11 +60,17 @@ class _BracketViewState extends State<BracketView> {
   }
 
   /// Rounds in ascending order, each with its fixtures.
+  ///
+  /// Group rounds are deliberately excluded: they are a separate stage whose
+  /// tables live in the group view, and drawing them as bracket columns would
+  /// imply they feed into the knockout rounds.
   List<_BracketRound> _buildRounds() {
     final byRound = <int, List<Match>>{};
     final unrouted = <Match>[];
 
     for (final match in _matches) {
+      if (match.roundType == 'GROUP') continue;
+
       final number = match.roundNumber;
       if (number == null) {
         unrouted.add(match);
@@ -127,6 +133,23 @@ class _BracketViewState extends State<BracketView> {
     }
 
     final rounds = _buildRounds();
+    // A group-only tournament has fixtures but no knockout tree yet, which is a
+    // different situation from having no fixtures at all.
+    if (rounds.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: FCColors.surface,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const EmptyState(
+          icon: Icons.account_tree_outlined,
+          title: 'No knockout rounds yet',
+          subtitle: 'Advance the group qualifiers to build the bracket.',
+        ),
+      );
+    }
+
     final step = _cardHeight + _rowGap;
 
     // A well-formed bracket halves its ties each round, so the first round is

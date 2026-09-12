@@ -75,10 +75,15 @@ class Tournament {
     switch (format) {
       case 'KNOCKOUT': return 'Knockout';
       case 'LEAGUE': return 'League';
+      case 'GROUP_STAGE': return 'Group Stage';
       case 'GROUP_KNOCKOUT': return 'Group + Knockout';
       default: return format;
     }
   }
+
+  /// Formats that begin with a group draw, so the UI knows to offer it.
+  bool get isGroupFormat =>
+      format == 'GROUP_STAGE' || format == 'GROUP_KNOCKOUT';
 }
 
 class TournamentParticipant {

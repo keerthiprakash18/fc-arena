@@ -85,7 +85,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
       await _api.adminReview(widget.leagueId, widget.matchId, approved: approved, notes: notes);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(approved ? 'Verification approved â€” match verified!' : 'Verification rejected'),
+          content: Text(approved ? 'Verification approved — match verified!' : 'Verification rejected'),
           backgroundColor: approved ? Colors.green : Colors.red,
         ));
         Navigator.of(context).pop(true);
@@ -144,9 +144,9 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
     final t = _task!;
     final items = <(String, String)>[
       ('Status', t.status.replaceAll('_', ' ')),
-      ('AI Provider', t.aiProvider ?? 'â€”'),
-      ('Confidence', t.aiConfidenceScore != null ? '${(double.tryParse(t.aiConfidenceScore.toString())! * 100).toStringAsFixed(1)}%' : 'â€”'),
-      ('Evidence', t.evidenceFile ?? 'â€”'),
+      ('AI Provider', t.aiProvider ?? '—'),
+      ('Confidence', t.aiConfidenceScore != null ? '${(double.tryParse(t.aiConfidenceScore.toString())! * 100).toStringAsFixed(1)}%' : '—'),
+      ('Evidence', t.evidenceFile ?? '—'),
     ];
     return Container(
       padding: const EdgeInsets.all(16),

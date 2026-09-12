@@ -6,6 +6,7 @@ import '../models/tournament.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import 'bracket_view.dart';
+import 'group_stage_view.dart';
 
 class TournamentDetailScreen extends StatefulWidget {
   final int leagueId;
@@ -99,7 +100,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
     if (selected == null) return;
     try {
       await _api.updateTournamentStatus(widget.leagueId, widget.tournamentId, selected);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status â†’ $selected'), backgroundColor: Colors.green));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status → $selected'), backgroundColor: Colors.green));
       _load();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: Colors.red));
@@ -113,7 +114,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(created != null && created > 0
-              ? 'Generated $created match(es) â€” tournament ready!'
+              ? 'Generated $created match(es) — tournament ready!'
               : 'Fixtures ready!'),
           backgroundColor: Colors.green));
         _load();
@@ -195,6 +196,17 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                     Text('No participants yet', style: TextStyle(color: FCColors.white30))
                   else
                     ..._participants.map((p) => _participantRow(p)),
+                  if (_tournament!.isGroupFormat) ...[
+                    const SizedBox(height: 20),
+                    GroupStageView(
+                      leagueId: widget.leagueId,
+                      tournamentId: widget.tournamentId,
+                      isAdmin: _isAdmin,
+                      // A redraw or an advancement changes the fixture list, so
+                      // pull the tournament and its rounds back in.
+                      onChanged: _load,
+                    ),
+                  ],
                   if (_rounds.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     BracketView(leagueId: widget.leagueId, tournamentId: widget.tournamentId),
@@ -241,7 +253,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
           ),
         ]),
         const SizedBox(height: 10),
-        Text('${t.formatLabel} â€¢ ${t.code}', style: TextStyle(fontSize: 14, color: FCColors.white50)),
+        Text('${t.formatLabel} • ${t.code}', style: TextStyle(fontSize: 14, color: FCColors.white50)),
         if (t.description.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(t.description, style: TextStyle(fontSize: 14, color: FCColors.white70)),
@@ -255,9 +267,9 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
         if (t.entryFee > 0 || t.prizePool > 0) ...[
           const SizedBox(height: 8),
           Row(children: [
-            if (t.entryFee > 0) _stat(Icons.monetization_on, 'Entry: â‚¹${t.entryFee.toStringAsFixed(0)}'),
+            if (t.entryFee > 0) _stat(Icons.monetization_on, 'Entry: ₹${t.entryFee.toStringAsFixed(0)}'),
             if (t.entryFee > 0 && t.prizePool > 0) const SizedBox(width: 16),
-            if (t.prizePool > 0) _stat(Icons.emoji_events, 'Prize: â‚¹${t.prizePool.toStringAsFixed(0)}'),
+            if (t.prizePool > 0) _stat(Icons.emoji_events, 'Prize: ₹${t.prizePool.toStringAsFixed(0)}'),
           ]),
         ],
       ]),
