@@ -5,6 +5,32 @@ For cloud deployment see `DEPLOYMENT.md`.
 
 ---
 
+## Quick start — test it in 2 terminals
+
+**Terminal 1 — backend API** (both apps need this):
+
+```bash
+cd backend
+venv/Scripts/python.exe manage.py runserver 0.0.0.0:8000
+```
+
+**Terminal 2 — web app:**
+
+```bash
+python serve_web.py          # -> http://localhost:8080
+```
+
+Open <http://localhost:8080>, sign in with `luciferkp` / `keerthi@1518`, then click
+**CREATE A LEAGUE** on the Home screen (the DB starts empty on purpose).
+
+The web build in `frontend/build/web` is already compiled and committed, so you can
+skip `flutter build` unless you changed Dart code.
+
+> Backend must be running *before* the app makes its first request, otherwise login
+> spins. If you ever see it spin, the fix is the ⚙ network icon on the login screen.
+
+---
+
 ## 0. Prerequisites
 
 | Tool | Version used | Check |
@@ -45,12 +71,27 @@ curl http://localhost:8000/api/health/
 | `http://localhost:8000/api/health/` | liveness + database probe |
 | `http://localhost:8000/admin/` | Django admin |
 
-**Demo accounts**
+**Accounts**
+
+The database ships **empty** — one superuser, zero leagues, zero matches. That is
+intentional (all sample data was removed), and it means a fresh tester lands on
+the **Home** screen's empty state and clicks **CREATE A LEAGUE** — that is the
+intended first step, not a bug.
 
 | Username | Password | Role |
 |---|---|---|
-| `luciferkp` | `keerthi@1518` | league owner (invite code `FC-7SXVJS`) |
-| `player2` | `testpass123` | league member |
+| `luciferkp` | `keerthi@1518` | superuser / admin |
+
+Need a second account to test joining, invites, or member admin? Sign out, hit
+**Register**, then join with the league's invite code (League → Members → copy
+code). Or make one non-interactively:
+
+```bash
+cd backend
+venv/Scripts/python.exe manage.py shell -c "
+from django.contrib.auth import get_user_model
+get_user_model().objects.create_user('player2', password='testpass123')"
+```
 
 ---
 
@@ -188,7 +229,7 @@ flutter build appbundle --release --dart-define=API_BASE_URL=https://your-api.ex
 
 ```bash
 cd backend   && venv/Scripts/python.exe manage.py check        # config sanity
-cd backend   && venv/Scripts/python.exe manage.py test tests   # 90 API tests, ~3s
+cd backend   && venv/Scripts/python.exe manage.py test tests   # 90 API tests, ~13s
 cd frontend  && flutter analyze                                # expect: No issues found
 cd frontend  && flutter test                                   # splash / onboarding widget tests
 python smoke_test.py                                           # every button, end-to-end

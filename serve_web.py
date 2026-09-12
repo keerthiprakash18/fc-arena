@@ -17,7 +17,6 @@ import functools
 import http.server
 import mimetypes
 import os
-import socketserver
 import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend", "build", "web")
@@ -62,9 +61,16 @@ def main():
         mimetypes.add_type(content_type, ext)
 
     handler = functools.partial(Handler, directory=ROOT)
-    socketserver.TCPServer.allow_reuse_address = True
 
-    with socketserver.TCPServer(("0.0.0.0", port), handler) as httpd:
+    # ThreadingHTTPServer, not plain TCPServer. A single-threaded server handles
+    # one connection at a time, so a single stalled keep-alive connection (easy
+    # to leave behind from a browser tab or a killed curl) blocks every later
+    # request forever — the port stays LISTENING but nothing ever answers.
+    class Server(http.server.ThreadingHTTPServer):
+        daemon_threads = True
+        allow_reuse_address = True
+
+    with Server(("0.0.0.0", port), handler) as httpd:
         print("FC ARENA web app -> http://localhost:%d" % port)
         print("Serving %s" % ROOT)
         print("On your phone (same Wi-Fi): http://<this-machine-ip>:%d" % port)
