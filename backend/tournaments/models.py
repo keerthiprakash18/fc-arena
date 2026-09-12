@@ -30,6 +30,8 @@ class Tournament(models.Model):
 
     FORMAT_CHOICES = [
         ('LEAGUE', 'League'),
+        ('ROUND_ROBIN', 'Round Robin'),
+        ('GROUP_STAGE', 'Group Stage'),
         ('KNOCKOUT', 'Knockout'),
         ('GROUP_KNOCKOUT', 'Group + Knockout'),
         ('CUSTOM', 'Custom'),
@@ -57,11 +59,21 @@ class Tournament(models.Model):
     format = models.CharField(max_length=20, choices=FORMAT_CHOICES, default='KNOCKOUT')
     status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='DRAFT')
     max_participants = models.PositiveIntegerField(default=16)
+    min_participants = models.PositiveIntegerField(default=2)
     entry_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     prize_pool = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    prize_description = models.TextField(blank=True, default='')
+    rules = models.TextField(blank=True, default='')
+    game = models.CharField(max_length=100, blank=True, default='')
+    logo = models.ImageField(upload_to='tournaments/logos/', null=True, blank=True)
+    banner = models.ImageField(upload_to='tournaments/banners/', null=True, blank=True)
+    registration_start = models.DateTimeField(blank=True, null=True)
     registration_deadline = models.DateTimeField(blank=True, null=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
+    # When True, participants are Teams; when False, participants are Users.
+    # Existing tournaments default to False, so nothing changes for them.
+    is_team_based = models.BooleanField(default=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_tournaments')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -95,18 +107,34 @@ class TournamentParticipant(models.Model):
     ]
 
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='participants')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tournament_participations')
+    # A participant is EITHER a user (legacy) or a team (FCFC upgrade). Postgres
+    # treats NULLs as distinct in unique constraints, so the two unique_together
+    # rules below coexist without collisions.
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tournament_participations', null=True, blank=True)
+    team = models.ForeignKey('teams.Team', on_delete=models.CASCADE, related_name='tournament_participations', null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REGISTERED')
     seed_number = models.PositiveIntegerField(blank=True, null=True)
     registered_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'tournament_participants'
-        unique_together = ['tournament', 'user']
+        unique_together = [['tournament', 'user'], ['tournament', 'team']]
         ordering = ['seed_number', 'registered_at']
 
     def __str__(self):
-        return f"{self.user.username} in {self.tournament.name}"
+        if self.team_id:
+            who = self.team.name
+        elif self.user_id:
+            who = self.user.username
+        else:
+            who = 'TBD'
+        return f"{who} in {self.tournament.name}"
+
+    @property
+    def display_name(self):
+        if self.team_id:
+            return self.team.name
+        return self.user.username if self.user_id else 'TBD'
 
 
 class TournamentGroup(models.Model):
@@ -134,7 +162,7 @@ class TournamentGroupMember(models.Model):
         ordering = ['position']
 
     def __str__(self):
-        return f"{self.participant.user.username} in {self.group.name}"
+        return f"{self.participant.display_name} in {self.group.name}"
 
 
 class TournamentRound(models.Model):

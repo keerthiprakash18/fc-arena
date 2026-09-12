@@ -12,7 +12,7 @@ API_SECTIONS = [
     'accounts', 'leagues', 'seasons', 'tournaments', 'evidence', 'matches',
     'statistics', 'ratings', 'verification', 'leaderboards', 'awards',
     'records', 'disputes', 'notifications', 'auditlog', 'dashboard',
-    'categories',
+    'categories', 'teams',
 ]
 
 
@@ -64,4 +64,5 @@ urlpatterns = [
     path('api/', include('auditlog.urls')),
     path('api/', include('dashboard.urls')),
     path('api/', include('categories.urls')),
+    path('api/', include('teams.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

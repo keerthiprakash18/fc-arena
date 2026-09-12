@@ -103,15 +103,46 @@ class TournamentRegisterView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        participant, created = TournamentParticipant.objects.get_or_create(
-            tournament=tournament,
-            user=request.user,
-            defaults={'status': 'REGISTERED'}
-        )
+        # Team-based tournaments register a Team; legacy ones register the user.
+        if tournament.is_team_based:
+            from teams.models import Team, TeamMember
+
+            team_id = request.data.get('team_id')
+            if not team_id:
+                return Response(
+                    {'error': 'team_id is required for a team-based tournament.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            team = get_object_or_404(Team, id=team_id, league_id=league_id, is_active=True)
+
+            is_admin = LeagueMember.objects.filter(
+                league_id=league_id, user=request.user,
+                role__in=['LEAGUE_OWNER', 'LEAGUE_ADMIN'], is_active=True,
+            ).exists()
+            is_member = TeamMember.objects.filter(
+                team=team, user=request.user, is_active=True
+            ).exists()
+            if not (is_admin or is_member):
+                return Response(
+                    {'error': 'You can only register a team you belong to.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            participant, created = TournamentParticipant.objects.get_or_create(
+                tournament=tournament, team=team, defaults={'status': 'REGISTERED'}
+            )
+            already_message = 'That team is already registered for this tournament.'
+        else:
+            participant, created = TournamentParticipant.objects.get_or_create(
+                tournament=tournament,
+                user=request.user,
+                defaults={'status': 'REGISTERED'}
+            )
+            already_message = 'You are already registered for this tournament.'
 
         if not created:
             return Response(
-                {'error': 'You are already registered for this tournament.'},
+                {'error': already_message},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -196,7 +227,14 @@ class TournamentFixturesView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        count, message = generate_fixtures(tournament)
+        # Optional scheduling parameters, used by team-based tournaments.
+        options = {
+            key: request.data.get(key)
+            for key in ('start_date', 'start_time', 'interval_minutes',
+                        'match_days', 'per_day', 'venue', 'double_round')
+            if request.data.get(key) is not None
+        }
+        count, message = generate_fixtures(tournament, options)
         return Response({'matches_created': count, 'message': message, 'status': tournament.status})
 
 

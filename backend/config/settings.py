@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'auditlog',
     'dashboard',
     'categories',
-
+    'teams',
 ]
 
 MIDDLEWARE = [

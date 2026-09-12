@@ -30,11 +30,18 @@ class Match(models.Model):
     league = models.ForeignKey('leagues.League', on_delete=models.CASCADE, related_name='matches')
     tournament = models.ForeignKey('tournaments.Tournament', on_delete=models.CASCADE, related_name='matches', null=True, blank=True)
     round = models.ForeignKey('tournaments.TournamentRound', on_delete=models.SET_NULL, null=True, blank=True, related_name='matches')
-    home_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='home_matches')
-    away_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='away_matches')
+    # Participant pairs. A match is EITHER user-based (legacy) or team-based
+    # (FCFC upgrade) — never both. The user FKs were relaxed to nullable so
+    # team fixtures can leave them empty; existing rows are unaffected.
+    home_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='home_matches', null=True, blank=True)
+    away_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='away_matches', null=True, blank=True)
+    home_team = models.ForeignKey('teams.Team', on_delete=models.CASCADE, related_name='home_matches', null=True, blank=True)
+    away_team = models.ForeignKey('teams.Team', on_delete=models.CASCADE, related_name='away_matches', null=True, blank=True)
     home_score = models.PositiveIntegerField(blank=True, null=True)
     away_score = models.PositiveIntegerField(blank=True, null=True)
     status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='SCHEDULED')
+    # Free-text room/lobby/venue, used by the fixture generator.
+    venue = models.CharField(max_length=120, blank=True, default='')
     scheduled_at = models.DateTimeField(blank=True, null=True)
     played_at = models.DateTimeField(blank=True, null=True)
     verified_at = models.DateTimeField(blank=True, null=True)
@@ -48,7 +55,24 @@ class Match(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.home_user.username} vs {self.away_user.username} ({self.status})"
+        return f"{self.home_display} vs {self.away_display} ({self.status})"
+
+    @property
+    def is_team_match(self):
+        """True when this match is contested between teams rather than users."""
+        return self.home_team_id is not None or self.away_team_id is not None
+
+    @property
+    def home_display(self):
+        if self.home_team_id:
+            return self.home_team.name
+        return self.home_user.username if self.home_user_id else 'TBD'
+
+    @property
+    def away_display(self):
+        if self.away_team_id:
+            return self.away_team.name
+        return self.away_user.username if self.away_user_id else 'TBD'
 
     def can_transition_to(self, new_status):
         allowed = self.VALID_TRANSITIONS.get(self.status, [])

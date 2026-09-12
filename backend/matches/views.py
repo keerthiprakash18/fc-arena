@@ -28,7 +28,7 @@ class MatchListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         league_id = self.kwargs['league_id']
         queryset = Match.objects.filter(league_id=league_id).select_related(
-            'home_user', 'away_user', 'league'
+            'home_user', 'away_user', 'home_team', 'away_team', 'league'
         )
         tournament_id = self.request.query_params.get('tournament_id')
         if tournament_id:
@@ -55,7 +55,9 @@ class MatchDetailView(generics.RetrieveAPIView):
         league_id = self.kwargs['league_id']
         match_id = self.kwargs['match_id']
         return get_object_or_404(
-            Match.objects.select_related('home_user', 'away_user', 'league'),
+            Match.objects.select_related(
+                'home_user', 'away_user', 'home_team', 'away_team', 'league'
+            ),
             id=match_id, league_id=league_id
         )
 
@@ -106,6 +108,39 @@ class MatchStatusUpdateView(generics.GenericAPIView):
         return Response(MatchSerializer(match).data)
 
 
+def _is_league_admin(user, league_id):
+    """True when ``user`` is an active owner/admin of the league."""
+    from leagues.models import LeagueMember
+    return LeagueMember.objects.filter(
+        league_id=league_id,
+        user=user,
+        role__in=['LEAGUE_OWNER', 'LEAGUE_ADMIN'],
+        is_active=True,
+    ).exists()
+
+
+def _can_submit_result(user, match):
+    """Who may report a score.
+
+    User matches keep the original rule: only the two participants. Team
+    matches have no ``home_user``/``away_user`` at all (both are None), so the
+    old equality check rejected every submission with a 403. For those, allow a
+    league admin or any active member of either competing team.
+    """
+    if not match.is_team_match:
+        return user == match.home_user or user == match.away_user
+
+    if _is_league_admin(user, match.league_id):
+        return True
+
+    from teams.models import TeamMember
+    return TeamMember.objects.filter(
+        team_id__in=[t for t in (match.home_team_id, match.away_team_id) if t],
+        user=user,
+        is_active=True,
+    ).exists()
+
+
 class MatchSubmitResultView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated, IsMatchLeagueMember]
 
@@ -115,7 +150,7 @@ class MatchSubmitResultView(generics.GenericAPIView):
         match = get_object_or_404(Match, id=match_id, league_id=league_id)
 
         user = request.user
-        if user != match.home_user and user != match.away_user:
+        if not _can_submit_result(user, match):
             return Response(
                 {'error': 'You are not a participant of this match.'},
                 status=status.HTTP_403_FORBIDDEN
@@ -133,6 +168,15 @@ class MatchSubmitResultView(generics.GenericAPIView):
         if home_score is None or away_score is None:
             return Response(
                 {'error': 'home_score and away_score are required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            home_score = int(home_score)
+            away_score = int(away_score)
+        except (TypeError, ValueError):
+            return Response(
+                {'error': 'home_score and away_score must be whole numbers.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

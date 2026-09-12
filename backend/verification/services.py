@@ -10,6 +10,37 @@ from .ocr_providers import get_ocr_provider
 AUTO_VERIFY_THRESHOLD = Decimal('0.8500')
 
 
+def _result_recipients(match):
+    """Users who should be told about a match result.
+
+    A user match notifies its two players directly. A team match has no players
+    on the match row at all (``home_user``/``away_user`` are both None), so it
+    notifies the active roster of both competing teams instead. Without this
+    branch the message formatting below would dereference ``None.username``.
+    """
+    if not match.is_team_match:
+        return [u for u in (match.home_user, match.away_user) if u]
+
+    from django.contrib.auth import get_user_model
+    from teams.models import TeamMember
+    team_ids = [t for t in (match.home_team_id, match.away_team_id) if t]
+    user_ids = TeamMember.objects.filter(
+        team_id__in=team_ids, is_active=True
+    ).values_list('user_id', flat=True).distinct()
+    return list(get_user_model().objects.filter(id__in=list(user_ids)))
+
+
+def _recipients_for_matches(matches):
+    """De-duplicated recipient list across several matches."""
+    seen, recipients = set(), []
+    for match in matches:
+        for user in _result_recipients(match):
+            if user.id not in seen:
+                seen.add(user.id)
+                recipients.append(user)
+    return recipients
+
+
 def create_verification_task(match, evidence):
     task, created = VerificationTask.objects.get_or_create(
         match=match,
@@ -158,12 +189,7 @@ def _sync_match_verification(task):
         if next_round_name:
             from notifications.services import create_bulk_notifications
             next_matches = list(match.tournament.matches.filter(round__round_number=match.round.round_number + 1))
-            next_participants = []
-            for nm in next_matches:
-                if nm.home_user_id:
-                    next_participants.append(nm.home_user)
-                if nm.away_user_id:
-                    next_participants.append(nm.away_user)
+            next_participants = _recipients_for_matches(next_matches)
             if next_participants:
                 create_bulk_notifications(
                     users=next_participants,
@@ -177,10 +203,11 @@ def _sync_match_verification(task):
 
         from notifications.services import create_bulk_notifications
         create_bulk_notifications(
-            users=[match.home_user, match.away_user],
+            users=_result_recipients(match),
             notification_type='MATCH_VERIFIED',
             title='Match Result Verified',
-            message=f'Match verified: {match.home_user.username} {match.home_score} - {match.away_score} {match.away_user.username}',
+            message=(f'Match verified: {match.home_display} '
+                     f'{match.home_score} - {match.away_score} {match.away_display}'),
             league=match.league,
             tournament=match.tournament,
             match=match,
@@ -188,7 +215,7 @@ def _sync_match_verification(task):
     elif new_match_status in ('REJECTED', 'DISPUTED'):
         from notifications.services import create_bulk_notifications
         create_bulk_notifications(
-            users=[match.home_user, match.away_user],
+            users=_result_recipients(match),
             notification_type='MATCH_REJECTED' if new_match_status == 'REJECTED' else 'DISPUTE_UPDATE',
             title='Match Result Rejected' if new_match_status == 'REJECTED' else 'Match Result Disputed',
             message=f'The submitted result for your match was {new_match_status}.',

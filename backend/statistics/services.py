@@ -14,6 +14,18 @@ def process_verified_match(match):
     if match.home_score is None or match.away_score is None:
         return
 
+    # A team-based match has no home_user/away_user, so the user-keyed
+    # statistics, Elo and standings below do not apply to it. Teams are
+    # aggregated separately by teams.services. Without this branch the
+    # get_or_create calls underneath would receive user=None and raise.
+    if match.is_team_match:
+        from teams.services import recompute_teams_for_match
+        with transaction.atomic():
+            recompute_teams_for_match(match)
+            match.is_idempotent_processed = True
+            match.save(update_fields=['is_idempotent_processed'])
+        return
+
     with transaction.atomic():
         _update_statistics(match)
         _update_ratings(match)
@@ -189,9 +201,16 @@ def rebuild_league_statistics(league, season=None):
         for match in matches_qs.order_by('created_at'):
             match.is_idempotent_processed = False
             match.save(update_fields=['is_idempotent_processed'])
+            if match.is_team_match:
+                # Team matches are aggregated by teams.services, not here.
+                continue
             _update_statistics(match)
             _update_standings(match)
             match.is_idempotent_processed = True
             match.save(update_fields=['is_idempotent_processed'])
 
         _recompute_ranks(league, season)
+
+    # Keep the team layer in step with a user-layer rebuild.
+    from teams.services import recompute_league_team_statistics
+    recompute_league_team_statistics(league)
