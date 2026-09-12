@@ -28,7 +28,7 @@ class MatchListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         league_id = self.kwargs['league_id']
         queryset = Match.objects.filter(league_id=league_id).select_related(
-            'home_user', 'away_user', 'home_team', 'away_team', 'league'
+            'home_user', 'away_user', 'home_team', 'away_team', 'league', 'round'
         )
         tournament_id = self.request.query_params.get('tournament_id')
         if tournament_id:
@@ -56,7 +56,7 @@ class MatchDetailView(generics.RetrieveAPIView):
         match_id = self.kwargs['match_id']
         return get_object_or_404(
             Match.objects.select_related(
-                'home_user', 'away_user', 'home_team', 'away_team', 'league'
+                'home_user', 'away_user', 'home_team', 'away_team', 'league', 'round'
             ),
             id=match_id, league_id=league_id
         )

@@ -227,7 +227,7 @@ class ApiService {
 
   Future<List<PlayerStanding>> getLeagueStandings(int leagueId, {int? seasonId}) async {
     final qs = seasonId != null ? '?season_id=$seasonId' : '';
-    final data = await _client.getList('/leagues/$leagueId/standings/$qs');
+    final data = await _client.getListAll('/leagues/$leagueId/standings/$qs');
     final results = data['results'] ?? data['players'] ?? data;
     if (results is List) {
       return results.map((p) => PlayerStanding.fromJson(p)).toList();

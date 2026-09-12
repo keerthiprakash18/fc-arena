@@ -1,9 +1,11 @@
 from django.urls import path
+
 from .views import (
     TournamentListCreateView, TournamentDetailView,
     TournamentStatusUpdateView, TournamentRegisterView,
     TournamentParticipantsView, TournamentGroupsView,
-    TournamentRoundsView, TournamentFixturesView, TournamentTransitionsView
+    TournamentRoundsView, TournamentFixturesView, TournamentTransitionsView,
+    TournamentGroupDrawView, TournamentGroupStandingsView, TournamentGroupAdvanceView,
 )
 
 urlpatterns = [
@@ -19,6 +21,14 @@ urlpatterns = [
          TournamentParticipantsView.as_view(), name='tournament-participants'),
     path('leagues/<int:league_id>/tournaments/<int:tournament_id>/groups/',
          TournamentGroupsView.as_view(), name='tournament-groups'),
+    # Draw / standings / advance must precede nothing here, but keeping the
+    # group sub-resources together makes the surface easy to read.
+    path('leagues/<int:league_id>/tournaments/<int:tournament_id>/groups/draw/',
+         TournamentGroupDrawView.as_view(), name='tournament-group-draw'),
+    path('leagues/<int:league_id>/tournaments/<int:tournament_id>/groups/standings/',
+         TournamentGroupStandingsView.as_view(), name='tournament-group-standings'),
+    path('leagues/<int:league_id>/tournaments/<int:tournament_id>/groups/advance/',
+         TournamentGroupAdvanceView.as_view(), name='tournament-group-advance'),
     path('leagues/<int:league_id>/tournaments/<int:tournament_id>/rounds/',
          TournamentRoundsView.as_view(), name='tournament-rounds'),
     path('leagues/<int:league_id>/tournaments/<int:tournament_id>/fixtures/',

@@ -4,7 +4,10 @@ from datetime import datetime, time as dtime, timedelta
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Tournament, TournamentRound, TournamentParticipant
+from .models import (
+    Tournament, TournamentRound, TournamentParticipant,
+    TournamentGroup, TournamentGroupMember,
+)
 from matches.models import Match
 
 
@@ -143,9 +146,12 @@ def generate_fixtures(tournament, options=None):
     """Dispatch to the right generator.
 
     Team-based tournaments (``is_team_based``) use the team generator, which
-    also honours scheduling options. Everything else keeps the original
-    user-based behaviour, so existing tournaments are completely unaffected.
+    also honours scheduling options. Group formats play a round-robin inside
+    each group instead. Everything else keeps the original user-based behaviour,
+    so existing tournaments are completely unaffected.
     """
+    if tournament.format in ('GROUP_STAGE', 'GROUP_KNOCKOUT'):
+        return generate_group_fixtures(tournament, options)
     if tournament.is_team_based:
         return generate_team_fixtures(tournament, options)
     if tournament.format in ('LEAGUE', 'ROUND_ROBIN'):
@@ -395,7 +401,7 @@ def generate_team_fixtures(tournament, options=None):
     created = 0
 
     with transaction.atomic():
-        if tournament.format in ('LEAGUE', 'ROUND_ROBIN', 'GROUP_STAGE'):
+        if tournament.format in ('LEAGUE', 'ROUND_ROBIN'):
             tr, _ = TournamentRound.objects.get_or_create(
                 tournament=tournament, round_number=1,
                 defaults={'name': 'League Round', 'round_type': 'LEAGUE'},
@@ -437,3 +443,285 @@ def generate_team_fixtures(tournament, options=None):
     tournament.status = 'READY'
     tournament.save(update_fields=['status', 'updated_at'])
     return created, f'Generated {created} team fixtures.'
+
+# ── Group stage (FCFC upgrade) ───────────────────────────────────────────────
+#
+# A group-stage tournament plays a round-robin inside each group, then the top
+# finishers cross over into a knockout bracket. Each group gets its own
+# TournamentRound (round_type='GROUP'), which is what lets a verified match be
+# attributed back to the group it belongs to without a new FK on Match.
+
+GROUP_ROUND_TYPE = 'GROUP'
+DEFAULT_PER_GROUP_QUALIFIERS = 2
+
+
+def _participant_field(tournament):
+    """Which participant FK pair a fixture for this tournament writes to."""
+    return 'team' if tournament.is_team_based else 'user'
+
+
+def _side(field, prefix, participant):
+    """``{'home_user': user}`` or ``{'home_team': team}``, or None for an empty slot."""
+    if participant is None:
+        return {f'{prefix}_{field}': None}
+    return {f'{prefix}_{field}': getattr(participant, field)}
+
+
+def _group_participants(tournament):
+    return list(
+        tournament.participants
+        .exclude(status='WITHDRAWN')
+        .select_related('user', 'team')
+        .order_by('seed_number', 'registered_at')
+    )
+
+
+def create_groups(tournament, group_count=None):
+    """Distribute registered participants across groups, snake-seeded.
+
+    Snake order (A,B,C,C,B,A,…) keeps the strongest seeds apart, so group A
+    does not collect every top seed. Any existing groups are replaced.
+    """
+    participants = _group_participants(tournament)
+    if len(participants) < 2:
+        return [], 'At least 2 participants are required to form groups.'
+
+    if not group_count:
+        # Aim for 3-4 per group, clamped to what the field can support.
+        group_count = max(2, min(4, len(participants) // 3))
+    group_count = max(1, min(int(group_count), len(participants)))
+
+    with transaction.atomic():
+        TournamentGroup.objects.filter(tournament=tournament).delete()
+
+        groups = [
+            TournamentGroup.objects.create(
+                tournament=tournament,
+                group_number=i + 1,
+                name=chr(ord('A') + i),
+            )
+            for i in range(group_count)
+        ]
+
+        for index, participant in enumerate(participants):
+            cycle, offset = divmod(index, group_count)
+            slot = offset if cycle % 2 == 0 else group_count - 1 - offset
+            TournamentGroupMember.objects.create(
+                group=groups[slot], participant=participant, position=index,
+            )
+
+    return groups, f'Created {len(groups)} groups from {len(participants)} participants.'
+
+
+def generate_group_fixtures(tournament, options=None):
+    """Round-robin fixtures inside every group, honouring scheduling options."""
+    options = options or {}
+    groups = list(tournament.groups.all())
+    if not groups:
+        return 0, 'Create groups before generating group fixtures.'
+
+    if Match.objects.filter(tournament=tournament, round__round_type=GROUP_ROUND_TYPE).exists():
+        return 0, 'Group fixtures already generated.'
+
+    field = _participant_field(tournament)
+    scheduler = FixtureScheduler(
+        _parse_start(options.get('start_date'), options.get('start_time')),
+        interval_minutes=options.get('interval_minutes', DEFAULT_INTERVAL_MINUTES),
+        match_days=options.get('match_days'),
+        per_day=options.get('per_day', DEFAULT_PER_DAY),
+    )
+    venue = (options.get('venue') or '')[:120]
+    double_round = bool(options.get('double_round'))
+    created = 0
+
+    with transaction.atomic():
+        for group in groups:
+            # One round per group keeps group membership recoverable from the
+            # match's round, with no schema change.
+            round_row, _ = TournamentRound.objects.get_or_create(
+                tournament=tournament,
+                round_number=group.group_number,
+                defaults={'name': f'Group {group.name}', 'round_type': GROUP_ROUND_TYPE},
+            )
+
+            members = [
+                m.participant
+                for m in group.members.select_related('participant__user', 'participant__team')
+            ]
+            pairs = [
+                (members[i], members[j])
+                for i in range(len(members))
+                for j in range(i + 1, len(members))
+            ]
+            if double_round:
+                pairs += [(away, home) for home, away in pairs]
+
+            for home, away in pairs:
+                Match.objects.create(
+                    league=tournament.league,
+                    tournament=tournament,
+                    round=round_row,
+                    scheduled_at=scheduler.next(),
+                    venue=venue,
+                    status='SCHEDULED',
+                    **_side(field, 'home', home),
+                    **_side(field, 'away', away),
+                )
+                created += 1
+
+    tournament.status = 'READY'
+    tournament.save(update_fields=['status', 'updated_at'])
+    return created, f'Generated {created} group fixtures across {len(groups)} groups.'
+
+
+def _group_table_rows(tournament, group, field):
+    """Standings rows for one group, from that group's VERIFIED matches."""
+    members = list(
+        group.members.select_related('participant__user', 'participant__team')
+    )
+    rows = {}
+    for member in members:
+        participant = member.participant
+        obj = getattr(participant, field)
+        if obj is None:
+            continue
+        rows[obj.id] = {
+            'participant': participant,
+            'played': 0, 'wins': 0, 'draws': 0, 'losses': 0,
+            'goals_for': 0, 'goals_against': 0,
+        }
+
+    matches = Match.objects.filter(
+        tournament=tournament,
+        round__round_type=GROUP_ROUND_TYPE,
+        # Group rounds are numbered after their group, so the round number is
+        # the group number. That keeps group membership on the existing schema.
+        round__round_number=group.group_number,
+        status='VERIFIED',
+        home_score__isnull=False,
+        away_score__isnull=False,
+    )
+
+    for match in matches:
+        home = getattr(match, f'home_{field}')
+        away = getattr(match, f'away_{field}')
+        if home is None or away is None:
+            continue
+        if home.id not in rows or away.id not in rows:
+            continue
+
+        home_row, away_row = rows[home.id], rows[away.id]
+        home_row['played'] += 1
+        away_row['played'] += 1
+        home_row['goals_for'] += match.home_score
+        home_row['goals_against'] += match.away_score
+        away_row['goals_for'] += match.away_score
+        away_row['goals_against'] += match.home_score
+
+        if match.home_score > match.away_score:
+            home_row['wins'] += 1
+            away_row['losses'] += 1
+        elif match.away_score > match.home_score:
+            away_row['wins'] += 1
+            home_row['losses'] += 1
+        else:
+            home_row['draws'] += 1
+            away_row['draws'] += 1
+
+    ordered = []
+    for row in rows.values():
+        row['goal_difference'] = row['goals_for'] - row['goals_against']
+        row['points'] = row['wins'] * 3 + row['draws']
+        ordered.append(row)
+
+    # Points, then goal difference, then goals scored — the standard tiebreak.
+    ordered.sort(key=lambda r: (-r['points'], -r['goal_difference'], -r['goals_for']))
+    for index, row in enumerate(ordered):
+        row['rank'] = index + 1
+    return ordered
+
+
+def group_standings(tournament):
+    """Ordered ``{group: [row, ...]}`` for every group in the tournament."""
+    field = _participant_field(tournament)
+    return {
+        group: _group_table_rows(tournament, group, field)
+        for group in tournament.groups.all()
+    }
+
+
+def advance_group_winners(tournament, per_group=DEFAULT_PER_GROUP_QUALIFIERS):
+    """Promote the top ``per_group`` finishers of each group into a knockout round.
+
+    Qualifiers cross over between neighbouring groups (A1 vs B2, B1 vs A2, …) so
+    teams that already met in the group stage do not meet again immediately.
+    """
+    groups = list(tournament.groups.order_by('group_number'))
+    if len(groups) < 2:
+        return 0, 'At least 2 groups are required to advance into a knockout.'
+
+    standings = group_standings(tournament)
+    field = _participant_field(tournament)
+
+    qualifiers = []
+    for group in groups:
+        rows = standings.get(group, [])
+        if len(rows) < per_group:
+            return 0, (
+                f'Group {group.name} has only {len(rows)} participant(s); '
+                f'{per_group} are needed per group to advance.'
+            )
+        qualifiers.append([row['participant'] for row in rows[:per_group]])
+
+    # Cross-over pairing between adjacent groups.
+    pairing = []
+    for i in range(0, len(groups) - 1, 2):
+        left, right = qualifiers[i], qualifiers[i + 1]
+        for k in range(per_group):
+            pairing.append((left[k], right[per_group - 1 - k]))
+    if len(groups) % 2 == 1:
+        # An unpaired final group: its qualifiers meet each other.
+        rest = qualifiers[-1]
+        for k in range(0, len(rest) - 1, 2):
+            pairing.append((rest[k], rest[k + 1]))
+
+    if not pairing:
+        return 0, 'No qualifiers to pair.'
+
+    next_number = (
+        TournamentRound.objects.filter(tournament=tournament)
+        .order_by('-round_number')
+        .values_list('round_number', flat=True)
+        .first() or 0
+    ) + 1
+
+    with transaction.atomic():
+        round_row = TournamentRound.objects.create(
+            tournament=tournament,
+            round_number=next_number,
+            name=_round_name_for_match_count(len(pairing)),
+            round_type='KNOCKOUT',
+            is_current=True,
+        )
+        TournamentRound.objects.filter(tournament=tournament, is_current=True) \
+            .exclude(id=round_row.id).update(is_current=False)
+
+        for home, away in pairing:
+            Match.objects.create(
+                league=tournament.league,
+                tournament=tournament,
+                round=round_row,
+                status='SCHEDULED',
+                **_side(field, 'home', home),
+                **_side(field, 'away', away),
+            )
+
+        # Everyone who qualified is still live; everyone else is out.
+        qualified_ids = {p.id for pair in pairing for p in pair}
+        tournament.participants.exclude(id__in=qualified_ids) \
+            .exclude(status='WITHDRAWN').update(status='ELIMINATED')
+        tournament.participants.filter(id__in=qualified_ids).update(status='ACTIVE')
+
+    tournament.status = 'IN_PROGRESS'
+    tournament.save(update_fields=['status', 'updated_at'])
+    return len(pairing), f'Advanced {len(pairing) * 2} qualifiers into {round_row.name}.'

@@ -184,6 +184,11 @@ def _sync_match_verification(task):
         season = match.tournament.season if match.tournament and hasattr(match.tournament, 'season') else None
         calculate_leaderboards(match.league, season, match.tournament)
 
+        # Records are recomputed from the same verified data, so a new best can
+        # never be set by an unverified result.
+        from records.services import recompute_league_records
+        recompute_league_records(match.league)
+
         from tournaments.services import advance_tournament_after_verification
         next_round_name = advance_tournament_after_verification(match)
         if next_round_name:

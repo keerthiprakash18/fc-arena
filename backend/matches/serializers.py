@@ -14,6 +14,7 @@ _MATCH_PARTICIPANT_FIELDS = (
     'home_team_short_name', 'away_team_short_name',
     'home_team_logo', 'away_team_logo',
     'home_display', 'away_display',
+    'round_number', 'round_name',
 )
 
 
@@ -31,6 +32,16 @@ class _MatchParticipantFieldsMixin(serializers.Serializer):
     home_display = serializers.SerializerMethodField()
     away_display = serializers.SerializerMethodField()
     league_name = serializers.SerializerMethodField()
+    # The bracket needs to know which round a fixture belongs to; the bare
+    # `round` id alone is not enough to lay out columns in order.
+    round_number = serializers.SerializerMethodField()
+    round_name = serializers.SerializerMethodField()
+
+    def get_round_number(self, obj):
+        return obj.round.round_number if obj.round_id else None
+
+    def get_round_name(self, obj):
+        return obj.round.name if obj.round_id else None
 
     def get_home_username(self, obj):
         return obj.home_user.username if obj.home_user_id else None
@@ -84,7 +95,8 @@ class MatchSerializer(_MatchParticipantFieldsMixin, serializers.ModelSerializer)
                   'home_team_logo',
                   'away_team', 'away_team_name', 'away_team_short_name',
                   'away_team_logo',
-                  'home_display', 'away_display', 'is_team_match', 'venue',
+                  'home_display', 'away_display', 'round_number', 'round_name',
+                  'is_team_match', 'venue',
                   'home_score', 'away_score', 'status', 'scheduled_at',
                   'played_at', 'verified_at', 'verified_by',
                   'is_idempotent_processed', 'created_at', 'updated_at']
@@ -109,7 +121,8 @@ class MatchCreateSerializer(_MatchParticipantFieldsMixin, serializers.ModelSeria
                   'home_team_logo',
                   'away_team', 'away_team_name', 'away_team_short_name',
                   'away_team_logo',
-                  'home_display', 'away_display', 'is_team_match', 'venue',
+                  'home_display', 'away_display', 'round_number', 'round_name',
+                  'is_team_match', 'venue',
                   'home_score', 'away_score', 'status', 'scheduled_at',
                   'played_at', 'verified_at', 'verified_by',
                   'is_idempotent_processed', 'created_at', 'updated_at']

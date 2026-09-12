@@ -22,6 +22,10 @@ class Match {
   final String? awayDisplay;
   final bool isTeamMatch;
   final String venue;
+  /// Which knockout/group round this fixture belongs to. The bracket lays its
+  /// columns out in this order; null for ad-hoc fixtures with no round.
+  final int? roundNumber;
+  final String? roundName;
   final int? homeScore;
   final int? awayScore;
   final String status;
@@ -51,6 +55,8 @@ class Match {
     this.awayDisplay,
     this.isTeamMatch = false,
     this.venue = '',
+    this.roundNumber,
+    this.roundName,
     this.homeScore,
     this.awayScore,
     required this.status,
@@ -81,6 +87,8 @@ class Match {
     awayDisplay: json['away_display'],
     isTeamMatch: json['is_team_match'] ?? false,
     venue: json['venue'] ?? '',
+    roundNumber: (json['round_number'] as num?)?.toInt(),
+    roundName: json['round_name'],
     homeScore: json['home_score'],
     awayScore: json['away_score'],
     status: json['status'] ?? 'SCHEDULED',

@@ -208,6 +208,45 @@ class ApiClient {
     return _handleListResponse(response);
   }
 
+  /// GET a paginated collection and follow `next` until every page is read.
+  ///
+  /// The API paginates at 20 rows per page, so callers that need the whole set
+  /// — a knockout bracket, a full fixture list, a season standings table —
+  /// must walk the pages. Trusting page one would silently truncate them.
+  /// Returns `{'results': [...]}` so callers can read it exactly like [getList].
+  Future<Map<String, dynamic>> getListAll(String path) async {
+    final collected = <dynamic>[];
+    String? url = '$apiBaseUrl$path';
+    // A malformed `next` chain must not spin forever.
+    var guard = 0;
+
+    while (url != null && guard < 100) {
+      guard++;
+      final response = await http.get(Uri.parse(url), headers: _headers);
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        // Surfaces the real API error rather than a silently empty list.
+        await _handleResponse(response);
+        return {'results': collected};
+      }
+
+      final decoded = json.decode(utf8.decode(response.bodyBytes));
+
+      // Unpaginated endpoint: the payload *is* the collection.
+      if (decoded is List) return {'results': decoded};
+      if (decoded is! Map<String, dynamic>) break;
+
+      final page = decoded['results'];
+      if (page is! List) return decoded;
+      collected.addAll(page);
+
+      final next = decoded['next'];
+      url = (next is String && next.isNotEmpty) ? next : null;
+    }
+
+    return {'results': collected};
+  }
+
   Future<Map<String, dynamic>> post(String path, [Map<String, dynamic>? data]) async {
     final response = await http.post(
       Uri.parse('$apiBaseUrl$path'),

@@ -14,7 +14,12 @@ from .serializers import (
     TournamentStateTransitionSerializer
 )
 from .permissions import IsTournamentLeagueMember, IsTournamentLeagueAdmin
-from .services import generate_fixtures
+from .services import (
+    advance_group_winners,
+    create_groups,
+    generate_fixtures,
+    group_standings,
+)
 
 
 class TournamentListCreateView(generics.ListCreateAPIView):
@@ -249,3 +254,116 @@ class TournamentTransitionsView(generics.ListAPIView):
             tournament_id=tournament_id,
             tournament__league_id=league_id
         )
+
+
+# ── Group stage ──────────────────────────────────────────────────────────────
+
+class TournamentGroupDrawView(generics.GenericAPIView):
+    """Distribute the registered participants across groups.
+
+    POST body: ``{'group_count': 4}`` (optional — a sensible default is derived
+    from the field size). Any existing groups are replaced.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsTournamentLeagueAdmin]
+
+    def post(self, request, *args, **kwargs):
+        tournament = get_object_or_404(
+            Tournament, id=self.kwargs['tournament_id'], league_id=self.kwargs['league_id']
+        )
+
+        group_count = request.data.get('group_count')
+        if group_count is not None:
+            try:
+                group_count = int(group_count)
+            except (TypeError, ValueError):
+                return Response(
+                    {'error': 'group_count must be a whole number.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if group_count < 1:
+                return Response(
+                    {'error': 'group_count must be at least 1.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        groups, message = create_groups(tournament, group_count)
+        if not groups:
+            return Response({'error': message}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            'message': message,
+            'groups': TournamentGroupSerializer(groups, many=True).data,
+        })
+
+
+class TournamentGroupStandingsView(generics.GenericAPIView):
+    """Per-group tables, built from verified matches only."""
+
+    permission_classes = [permissions.IsAuthenticated, IsTournamentLeagueMember]
+
+    def get(self, request, *args, **kwargs):
+        tournament = get_object_or_404(
+            Tournament, id=self.kwargs['tournament_id'], league_id=self.kwargs['league_id']
+        )
+
+        payload = []
+        for group, rows in group_standings(tournament).items():
+            payload.append({
+                'group_id': group.id,
+                'name': group.name,
+                'group_number': group.group_number,
+                'standings': [
+                    {
+                        'rank': row['rank'],
+                        'participant_id': row['participant'].id,
+                        'name': row['participant'].display_name,
+                        'played': row['played'],
+                        'wins': row['wins'],
+                        'draws': row['draws'],
+                        'losses': row['losses'],
+                        'goals_for': row['goals_for'],
+                        'goals_against': row['goals_against'],
+                        'goal_difference': row['goal_difference'],
+                        'points': row['points'],
+                    }
+                    for row in rows
+                ],
+            })
+
+        return Response({'groups': payload, 'count': len(payload)})
+
+
+class TournamentGroupAdvanceView(generics.GenericAPIView):
+    """Promote the top finishers of each group into a knockout round.
+
+    POST body: ``{'per_group': 2}`` (optional).
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsTournamentLeagueAdmin]
+
+    def post(self, request, *args, **kwargs):
+        tournament = get_object_or_404(
+            Tournament, id=self.kwargs['tournament_id'], league_id=self.kwargs['league_id']
+        )
+
+        per_group = request.data.get('per_group', 2)
+        try:
+            per_group = int(per_group)
+        except (TypeError, ValueError):
+            return Response(
+                {'error': 'per_group must be a whole number.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if per_group < 1:
+            return Response(
+                {'error': 'per_group must be at least 1.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        created, message = advance_group_winners(tournament, per_group)
+        if not created:
+            return Response({'error': message}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'matches_created': created, 'message': message,
+                         'status': tournament.status})

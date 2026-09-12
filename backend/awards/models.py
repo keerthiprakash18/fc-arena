@@ -29,7 +29,9 @@ class Award(models.Model):
     tournament = models.ForeignKey('tournaments.Tournament', on_delete=models.SET_NULL, null=True, blank=True, related_name='awards')
     award_type = models.CharField(max_length=25, choices=AWARD_TYPE_CHOICES)
     custom_name = models.CharField(max_length=200, blank=True, default='')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='league_awards')
+    # A recipient is EITHER a user (legacy) or a team. Exactly one is set.
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='league_awards', null=True, blank=True)
+    team = models.ForeignKey('teams.Team', on_delete=models.CASCADE, related_name='awards', null=True, blank=True)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='AUTO')
     description = models.TextField(blank=True, default='')
     awarded_at = models.DateTimeField(auto_now_add=True)
@@ -42,7 +44,17 @@ class Award(models.Model):
 
     def __str__(self):
         name = self.custom_name or self.get_award_type_display()
-        return f"{name}: {self.user.username} ({self.league.name})"
+        return f"{name}: {self.display_name} ({self.league.name})"
+
+    @property
+    def display_name(self):
+        if self.team_id:
+            return self.team.name
+        return self.user.username if self.user_id else 'Unknown'
+
+    @property
+    def title(self):
+        return self.custom_name or self.get_award_type_display()
 
 
 class AwardAuditLog(models.Model):
