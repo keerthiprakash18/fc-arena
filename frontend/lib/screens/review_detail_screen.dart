@@ -130,7 +130,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(gradient: const LinearGradient(colors: [FCColors.accent, FCColors.surfaceLight]), borderRadius: BorderRadius.circular(16)),
       child: Column(children: [
-        Text('${m.homeUsername ?? 'Home'} vs ${m.awayUsername ?? 'Away'}', textAlign: TextAlign.center,
+        Text('${m.homeName} vs ${m.awayName}', textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
         const SizedBox(height: 12),
         Text(m.scoreDisplay, style: const TextStyle(fontSize: 44, fontWeight: FontWeight.bold, color: Colors.white)),

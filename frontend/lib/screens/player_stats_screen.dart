@@ -269,7 +269,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
               child: Row(children: [
                 Container(width: 2, height: 28, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(width: 10),
-                Expanded(child: Text('${m.homeUsername ?? '?'} vs ${m.awayUsername ?? '?'}',
+                Expanded(child: Text('${m.homeName} vs ${m.awayName}',
                   style: const TextStyle(fontSize: 13, color: Colors.white), overflow: TextOverflow.ellipsis)),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

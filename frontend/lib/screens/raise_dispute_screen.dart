@@ -115,7 +115,7 @@ class _RaiseDisputeScreenState extends State<RaiseDisputeScreen> {
                         hint: Text('Choose match', style: TextStyle(color: FCColors.white30)),
                         items: _myMatches.map((m) => DropdownMenuItem(
                           value: m.id,
-                          child: Text('Match #${m.id} â€” ${m.homeUsername ?? ''} vs ${m.awayUsername ?? ''} (${m.status.replaceAll('_', ' ')})',
+                          child: Text('Match #${m.id} - ${m.homeName} vs ${m.awayName} (${m.status.replaceAll('_', ' ')})',
                             style: const TextStyle(color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
                         )).toList(),
                         onChanged: (v) => setState(() => _selectedMatchId = v),

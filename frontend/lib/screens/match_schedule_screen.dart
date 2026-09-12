@@ -115,9 +115,9 @@ class _MatchScheduleScreenState extends State<MatchScheduleScreen> {
         ),
         child: Row(children: [
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(match.homeUsername ?? '?', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text(match.homeName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
-            Text(match.awayUsername ?? '?', style: TextStyle(fontSize: 14, color: FCColors.white50)),
+            Text(match.awayName, style: TextStyle(fontSize: 14, color: FCColors.white50), overflow: TextOverflow.ellipsis),
           ])),
           Column(children: [
             Container(

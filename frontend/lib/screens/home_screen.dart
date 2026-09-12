@@ -12,6 +12,7 @@ import 'login_screen.dart';
 import 'disputes_screen.dart';
 import 'seasons_screen.dart';
 import 'tournaments_screen.dart';
+import 'teams_screen.dart';
 import 'awards_screen.dart';
 import 'records_screen.dart';
 import 'profile_screen.dart';
@@ -558,6 +559,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildQuickActions() {
     final actions = [
       _Action(Icons.sports_soccer, 'Matches', const MatchesScreen(), FCColors.accent),
+      _Action(Icons.shield_outlined, 'Teams', const TeamsScreen(), FCColors.blue),
       _Action(Icons.leaderboard, 'Rankings', const LeaderboardScreen(), FCColors.amber),
       _Action(Icons.emoji_events, 'Tournaments', const TournamentsScreen(), FCColors.gold),
       _Action(Icons.calendar_month, 'Schedule', const MatchScheduleScreen(), FCColors.blue),

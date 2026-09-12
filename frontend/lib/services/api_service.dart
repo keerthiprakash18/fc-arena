@@ -10,6 +10,7 @@ import '../models/season.dart';
 import '../models/tournament.dart';
 import '../models/award.dart';
 import '../models/category.dart';
+import '../models/team.dart';
 
 class ApiService {
   final ApiClient _client;
@@ -101,6 +102,121 @@ class ApiService {
         .trim()
         .replaceAll(RegExp(r'[\s-]+'), '-');
     return slug.isEmpty ? 'league' : slug;
+  }
+
+  // ─── Teams ───────────────────────────────────────────
+  Future<List<Team>> getTeams(int leagueId, {String? game, String? search}) async {
+    final params = <String>[];
+    if (game != null && game.isNotEmpty) params.add('game=${Uri.encodeQueryComponent(game)}');
+    if (search != null && search.isNotEmpty) params.add('search=${Uri.encodeQueryComponent(search)}');
+    final qs = params.isEmpty ? '' : '?${params.join('&')}';
+    final data = await _client.getList('/leagues/$leagueId/teams/$qs');
+    final results = data['results'] ?? data;
+    if (results is List) {
+      return results.map((t) => Team.fromJson((t as Map).cast<String, dynamic>())).toList();
+    }
+    return [];
+  }
+
+  Future<Team> getTeam(int leagueId, int teamId) async {
+    final data = await _client.get('/leagues/$leagueId/teams/$teamId/');
+    return Team.fromJson(data);
+  }
+
+  Future<Team> createTeam(int leagueId, {
+    required String name,
+    String shortName = '',
+    String description = '',
+    String game = '',
+    int? captainId,
+    int? managerId,
+  }) async {
+    final data = await _client.post('/leagues/$leagueId/teams/', {
+      'name': name,
+      'short_name': shortName,
+      'description': description,
+      'game': game,
+      'captain': ?captainId,
+      'manager': ?managerId,
+    });
+    return Team.fromJson(data);
+  }
+
+  Future<Team> updateTeam(int leagueId, int teamId, Map<String, dynamic> changes) async {
+    final data = await _client.patch('/leagues/$leagueId/teams/$teamId/', changes);
+    return Team.fromJson(data);
+  }
+
+  /// Soft-deletes the team server-side, so its match history survives.
+  Future<void> deleteTeam(int leagueId, int teamId) async {
+    await _client.delete('/leagues/$leagueId/teams/$teamId/');
+  }
+
+  Future<List<TeamMember>> getTeamMembers(int leagueId, int teamId) async {
+    final data = await _client.getList('/leagues/$leagueId/teams/$teamId/members/');
+    final results = data['results'] ?? data;
+    if (results is List) {
+      return results.map((m) => TeamMember.fromJson((m as Map).cast<String, dynamic>())).toList();
+    }
+    return [];
+  }
+
+  Future<TeamMember> addTeamMember(int leagueId, int teamId, {
+    required int userId,
+    String role = 'PLAYER',
+    int? jerseyNumber,
+    String position = '',
+  }) async {
+    final data = await _client.post('/leagues/$leagueId/teams/$teamId/members/', {
+      'user': userId,
+      'role': role,
+      'jersey_number': ?jerseyNumber,
+      'position': position,
+    });
+    return TeamMember.fromJson(data);
+  }
+
+  Future<void> removeTeamMember(int leagueId, int teamId, int memberId) async {
+    await _client.delete('/leagues/$leagueId/teams/$teamId/members/$memberId/');
+  }
+
+  /// Upload a team logo or banner. [field] must be 'logo' or 'banner' to match
+  /// the two backend endpoints.
+  Future<Team> uploadTeamImage(int leagueId, int teamId, {
+    required String field,
+    required String filePath,
+    required String fileName,
+    required String mimeType,
+  }) async {
+    final body = await _client.uploadMultipart(
+      '/leagues/$leagueId/teams/$teamId/$field/',
+      filePath: filePath,
+      fileName: fileName,
+      mimeType: mimeType,
+      fieldName: field,
+    );
+    return Team.fromJson(json.decode(body) as Map<String, dynamic>);
+  }
+
+  Future<TeamStatistics?> getTeamStatistics(int leagueId, int teamId) async {
+    final data = await _client.get('/leagues/$leagueId/teams/$teamId/statistics/');
+    if (data.isEmpty) return null;
+    return TeamStatistics.fromJson(data);
+  }
+
+  /// Recomputes a team's statistics from its verified matches.
+  Future<TeamStatistics> recomputeTeamStatistics(int leagueId, int teamId) async {
+    final data = await _client.post('/leagues/$leagueId/teams/$teamId/statistics/', {});
+    return TeamStatistics.fromJson(data);
+  }
+
+  Future<List<TeamStanding>> getTeamStandings(int leagueId) async {
+    final data = await _client.getList('/leagues/$leagueId/teams/standings/');
+    final results = data['results'] ?? data;
+    if (results is List) {
+      return results.map((r) => TeamStanding.fromJson((r as Map).cast<String, dynamic>())).toList();
+    }
+    return [];
   }
 
   // ─── Dashboard ────────────────────────────────────────

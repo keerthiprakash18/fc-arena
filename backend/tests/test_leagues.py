@@ -49,6 +49,39 @@ class LeagueListingTests(ApiTestCase):
         response = self.client.get(f"/api/leagues/{league['id']}/")
         self.assertEqual(response.data['member_count'], 2)
 
+    def test_my_role_reports_the_callers_role(self):
+        """Clients gate organizer-only UI on this, so it must be accurate."""
+        league = self.create_league()                    # alice owns it
+        self.join_league(self.bob, league['league_code'])  # bob is a PLAYER
+
+        self.authenticate(self.alice)
+        self.assertEqual(
+            self.client.get(f"/api/leagues/{league['id']}/").data['my_role'],
+            'LEAGUE_OWNER',
+        )
+
+        self.authenticate(self.bob)
+        self.assertEqual(
+            self.client.get(f"/api/leagues/{league['id']}/").data['my_role'],
+            'PLAYER',
+        )
+
+    def test_my_role_tracks_promotion(self):
+        league = self.create_league()
+        self.join_league(self.bob, league['league_code'])
+
+        self.authenticate(self.alice)
+        self.client.patch(
+            f"/api/leagues/{league['id']}/members/{self.bob.id}/",
+            {'role': 'LEAGUE_ADMIN'}, format='json',
+        )
+
+        self.authenticate(self.bob)
+        self.assertEqual(
+            self.client.get(f"/api/leagues/{league['id']}/").data['my_role'],
+            'LEAGUE_ADMIN',
+        )
+
 
 class LeagueJoinTests(ApiTestCase):
     def test_join_with_valid_code_adds_member(self):

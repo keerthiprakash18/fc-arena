@@ -98,8 +98,10 @@ class _BracketViewState extends State<BracketView> {
       ),
       child: Row(children: [
         Expanded(
-          child: Text(match.homeUsername ?? '?',
-            style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: homeWon ? FontWeight.bold : FontWeight.normal)),
+          child: Text(match.homeName,
+            style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: homeWon ? FontWeight.bold : FontWeight.normal),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -113,9 +115,11 @@ class _BracketViewState extends State<BracketView> {
         ),
         const SizedBox(width: 4),
         Expanded(
-          child: Text(match.awayUsername ?? '?',
+          child: Text(match.awayName,
             style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: awayWon ? FontWeight.bold : FontWeight.normal),
-            textAlign: TextAlign.end),
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ]),
     );

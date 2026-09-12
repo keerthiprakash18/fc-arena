@@ -241,6 +241,7 @@ class ApiClient {
     required String fileName,
     required String mimeType,
     Map<String, String>? fields,
+    String fieldName = 'file',
   }) async {
     final request = http.MultipartRequest('POST', Uri.parse('$apiBaseUrl$path'));
     if (_accessToken != null) {
@@ -249,7 +250,7 @@ class ApiClient {
     if (fields != null) {
       request.fields.addAll(fields);
     }
-    request.files.add(await http.MultipartFile.fromPath('file', filePath, filename: fileName));
+    request.files.add(await http.MultipartFile.fromPath(fieldName, filePath, filename: fileName));
     final streamed = await request.send();
     final response = await http.Response.fromStream(streamed);
     if (response.statusCode >= 200 && response.statusCode < 300) {

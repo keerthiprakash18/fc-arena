@@ -121,9 +121,15 @@ class _MatchesScreenState extends State<MatchesScreen> {
               children: [
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(match.homeUsername ?? 'Home', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Row(children: [
+                      Flexible(child: Text(match.homeName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis)),
+                      if (match.isTeamMatch) ...[
+                        const SizedBox(width: 6),
+                        Icon(Icons.shield_outlined, size: 13, color: FCColors.white30),
+                      ],
+                    ]),
                     const SizedBox(height: 2),
-                    Text(match.awayUsername ?? 'Away', style: TextStyle(fontSize: 14, color: FCColors.white70)),
+                    Text(match.awayName, style: TextStyle(fontSize: 14, color: FCColors.white70), overflow: TextOverflow.ellipsis),
                   ]),
                 ),
                 Container(

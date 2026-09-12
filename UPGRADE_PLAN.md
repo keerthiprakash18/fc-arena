@@ -179,4 +179,65 @@ Ordered by dependency — each phase is independently shippable and leaves the a
 | Team layer bloats `Match` with two participant systems | Nullable FKs; a match asserts exactly one pair is set |
 | Duplicated stat logic (user + team) | Share the aggregation helper; team service mirrors user service structure |
 | Chart package adds weight | `fl_chart` is pure Dart, no native deps |
-| No image cache → slow logo grids | Add `cached_network_image` in Phase 5 |
+| No image cache → slow logo grids | Resolved: crests fall back to generated initials, and `Image.network` caches in-session. No new dependency needed. |
+
+---
+
+## 7. Progress log
+
+### Phase 1 — Teams app ✅
+`Team`, `TeamMember`, `TeamStatistics` + CRUD, roster, logo/banner upload, standings.
+22 tests.
+
+### Phase 2 — Additive model extensions ✅
+Nullable `home_team`/`away_team`/`venue` on `Match`; `is_team_based` and team-registration
+support on `Tournament`; `position`/`country`/`social_links` on `User`. All migrations
+additive — existing rows untouched.
+
+### Phase 3 — Team fixtures, statistics, standings ✅
+`FixtureScheduler` + `generate_team_fixtures` (round-robin and knockout, with start
+date/time, per-day cap, interval, match days, venue, double round-robin).
+`recompute_team_statistics` / `team_standings`. Team branch in
+`statistics.services.process_verified_match`. Team-aware knockout advancement.
+141 tests total.
+
+### Three defects found by live end-to-end testing and fixed
+1. `MatchSerializer` raised on the null `home_user` of a team match; team names,
+   logos, venue and `is_team_match` are now exposed through guarded method fields.
+2. `MatchSubmitResultView` returned 403 for every team match (it compared the caller
+   against two `None` user FKs). Team matches now accept a league admin or a member of
+   either competing team.
+3. The verification pipeline dereferenced `match.home_user.username` and notified
+   `[home_user, away_user]`, so a team match could never reach VERIFIED. Recipients are
+   now resolved from the active roster and messages use display names.
+
+Verified live against PostgreSQL: a team match reached VERIFIED, `TeamStatistics`
+moved (P1 W1, 3 pts), and the match list kept rendering.
+
+### Phase 4 — Frontend Teams UI ✅
+- `models/team.dart` — `Team`, `TeamMember`, `TeamStatistics`, `TeamStanding`
+- `models/match.dart` — team ids/names/logos, `isTeamMatch`, `venue`, `homeName`/`awayName`
+- `ApiService` — 11 team methods (list, detail, create, update, delete, roster,
+  image upload, statistics, recompute, standings)
+- `screens/teams_screen.dart` — standings table + squad grid with debounced search
+- `screens/team_detail_screen.dart` — banner/crest header, animated stats, form,
+  points-progress sparkline, roster, recent fixtures
+- Existing match screens now render team fixtures via `homeName`/`awayName`
+
+### Phase 5 — Animated statistics ✅ (no new dependencies)
+`widgets/fc_animations.dart`:
+`AnimatedCounter`, `ProgressRing`, `FormStrip`, `ComparisonBar`, `SparkLine`
+(CustomPainter), `TeamLogo` (initials fallback), `StatTile`, `MetricBar`.
+
+**Decision: no `fl_chart`, no `cached_network_image`.** Both were planned, but
+`CustomPainter` covers the required visuals with zero new dependencies — which keeps
+the build offline-reproducible and the APK size unchanged. Every animated widget honours
+the platform reduce-motion setting and paints its final value immediately when set.
+
+### Remaining
+- Phase 6: global search, tournament dashboard aggregates, live match screen,
+  responsive breakpoints, pagination
+- Graphical knockout bracket tree (`bracket_view.dart` is still a flat list)
+- Group stage API/UI (models exist, no endpoints)
+- `records/services.py` still empty; awards still manual-only
+

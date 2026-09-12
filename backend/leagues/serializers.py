@@ -18,16 +18,30 @@ class LeagueMemberSerializer(serializers.ModelSerializer):
 class LeagueSerializer(serializers.ModelSerializer):
     owner_name = serializers.CharField(source='owner.username', read_only=True)
     member_count = serializers.SerializerMethodField()
+    my_role = serializers.SerializerMethodField()
 
     class Meta:
         model = League
         fields = ['id', 'name', 'slug', 'description', 'league_code',
                   'owner', 'owner_name', 'is_active', 'member_count',
-                  'created_at', 'updated_at']
+                  'my_role', 'created_at', 'updated_at']
         read_only_fields = ['id', 'league_code', 'owner', 'created_at', 'updated_at']
 
     def get_member_count(self, obj):
         return obj.members.filter(is_active=True).count()
+
+    def get_my_role(self, obj):
+        """The requesting user's role in this league, or None.
+
+        The client needs this to decide whether to show organizer-only
+        affordances (creating teams, generating fixtures). Without it every
+        client would have to probe each admin endpoint and read a 403.
+        """
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return None
+        membership = obj.members.filter(user=request.user, is_active=True).first()
+        return membership.role if membership else None
 
 
 class LeagueCreateSerializer(serializers.ModelSerializer):

@@ -54,7 +54,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
         backgroundColor: FCColors.surface,
         title: const Text('Submit Result', style: TextStyle(color: Colors.white)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('${_match!.homeUsername} vs ${_match!.awayUsername}', style: const TextStyle(color: Colors.white70)),
+          Text('${_match!.homeName} vs ${_match!.awayName}', style: const TextStyle(color: Colors.white70)),
           const SizedBox(height: 16),
           Row(children: [
             Expanded(child: TextField(controller: homeCtrl, keyboardType: TextInputType.number,
@@ -193,7 +193,15 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(children: [
-              Text(match.homeUsername ?? 'Home', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(match.homeName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+              if (match.venue.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.place_outlined, size: 12, color: FCColors.white30),
+                  const SizedBox(width: 4),
+                  Text(match.venue, style: TextStyle(fontSize: 11, color: FCColors.white50)),
+                ]),
+              ],
               const SizedBox(height: 12),
               Text(match.scoreDisplay, style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: color)),
               const SizedBox(height: 4),
@@ -203,7 +211,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                 child: Text(match.status.replaceAll('_', ' '), style: TextStyle(color: color, fontWeight: FontWeight.w600)),
               ),
               const SizedBox(height: 12),
-              Text(match.awayUsername ?? 'Away', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(match.awayName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
             ]),
           ),
           const SizedBox(height: 24),
