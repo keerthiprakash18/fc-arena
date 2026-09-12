@@ -234,10 +234,51 @@ moved (P1 W1, 3 pts), and the match list kept rendering.
 the build offline-reproducible and the APK size unchanged. Every animated widget honours
 the platform reduce-motion setting and paints its final value immediately when set.
 
+### Records, awards and the group stage ✅
+
+**Records** — `records/services.py` was an empty file; it now implements
+`recompute_league_records()`. Records are derived from VERIFIED matches only.
+A superseded holder is kept with `is_current=False` so history accumulates, and a
+record type with no qualifying data is retired rather than left stale.
+`MIN_MATCHES_FOR_WIN_RATE = 5` stops a one-match win rate from looking like a
+record. Wired into the verification pipeline, and exposed behind an admin-only
+`records/recompute/`.
+
+The old `unique_together = ['league','record_type','is_current']` made history
+impossible — it allowed only one superseded row. Replaced with a conditional
+`UniqueConstraint(..., condition=Q(is_current=True))`.
+
+**Awards** — `awards/services.py` (new) auto-computes awards from verified
+results. The important rule: a type an organizer has already decided by hand is
+**reserved** and never overwritten by the auto pass. Tournament champion and
+runner-up come from the VERIFIED final only; a drawn final crowns nobody.
+`awards/compute/` is admin-only and returns the read serializer shape.
+
+**Group stage** — seeding (snake), fixtures, per-group tables, and cross-over
+advancement into the knockout. Group rounds are numbered after their group, so
+`round__round_number=group.group_number` recovers membership with no schema
+change. Team-aware knockout advancement was a prerequisite: every winner lookup
+had been user-keyed, so a team bracket never advanced at all.
+
+**Bracket** — `bracket_view.dart` is now a real tree: one column per round,
+elbow connectors, winners bolded, horizontally scrollable. Group rounds are
+excluded via the new `round_type` field, since drawing them as bracket columns
+would imply they feed into the knockout.
+
+**Frontend** — new `group_stage_view.dart`; `records_screen.dart` and
+`awards_screen.dart` rebuilt around team holders, with current/previous record
+splits, AUTO vs MANUAL award badges, a league picker and the admin actions.
+
+### Two client defects found while wiring this up
+
+- **`getList` only read page one.** DRF paginates at 20 rows, so
+  `getLeagueMatches` silently truncated and would have cut a bracket off
+  mid-round. Added `ApiClient.getListAll`, which follows `next` to exhaustion.
+- **Mojibake in 8 screens** — double-encoded UTF-8 dashes, bullets, rupee signs
+  and a fallback emoji that rendered as `ðŸŽ–ï¸`.
+
 ### Remaining
-- Phase 6: global search, tournament dashboard aggregates, live match screen,
-  responsive breakpoints, pagination
-- Graphical knockout bracket tree (`bracket_view.dart` is still a flat list)
-- Group stage API/UI (models exist, no endpoints)
-- `records/services.py` still empty; awards still manual-only
+- Phase 6: global search, tournament dashboard aggregates, live match screen
+  with goal animation, responsive breakpoints
+- Push is blocked: no credentials in the session, so four commits are local only
 
