@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../models/dashboard.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/responsive.dart';
 import 'notifications_screen.dart';
 import 'matches_screen.dart';
 import 'leaderboard_screen.dart';
@@ -20,6 +21,7 @@ import 'categories_screen.dart';
 import 'head_to_head_screen.dart';
 import 'match_schedule_screen.dart';
 import 'settings_screen.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -558,6 +560,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildQuickActions() {
     final actions = [
+      _Action(Icons.search, 'Search', const SearchScreen(), FCColors.accent),
       _Action(Icons.sports_soccer, 'Matches', const MatchesScreen(), FCColors.accent),
       _Action(Icons.shield_outlined, 'Teams', const TeamsScreen(), FCColors.blue),
       _Action(Icons.leaderboard, 'Rankings', const LeaderboardScreen(), FCColors.amber),
@@ -572,8 +575,15 @@ class _HomeScreenState extends State<HomeScreen> {
       _Action(Icons.leaderboard, 'Records', const RecordsScreen(), FCColors.blue),
       _Action(Icons.settings, 'Settings', const SettingsScreen(), FCColors.white50),
     ];
+    // A fixed four columns wastes a desktop window and crowds a phone, so the
+    // count follows the form factor instead.
+    final crossAxisCount = switch (formFactorOf(context)) {
+      FormFactor.desktop => 8,
+      FormFactor.tablet => 6,
+      FormFactor.mobile => 4,
+    };
     return GridView.count(
-      crossAxisCount: 4,
+      crossAxisCount: crossAxisCount,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 10,

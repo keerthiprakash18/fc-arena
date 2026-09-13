@@ -227,3 +227,104 @@ def platform_overview():
         'audit_events': AuditLog.objects.count(),
         'notifications_sent': Notification.objects.count(),
     }
+
+
+def search_league(league, query, limit=8):
+    """Search one league's teams, tournaments, players and fixtures.
+
+    Scoped to a single league on purpose: a member of one league must not be
+    able to enumerate another league's teams or players through search.
+
+    An empty query returns empty buckets rather than everything, so a stray
+    keystroke never dumps the whole league into the UI. Results come straight
+    from the database — nothing is synthesised.
+    """
+    from teams.models import Team
+
+    term = (query or '').strip()
+    empty = {'query': '', 'teams': [], 'tournaments': [], 'players': [], 'matches': []}
+    if not term:
+        return empty
+
+    teams = (
+        Team.objects.filter(league=league, is_active=True)
+        .filter(
+            Q(name__icontains=term)
+            | Q(short_name__icontains=term)
+            | Q(game__icontains=term)
+        )
+        .order_by('name')[:limit]
+    )
+
+    tournaments = (
+        Tournament.objects.filter(league=league)
+        .filter(Q(name__icontains=term) | Q(tournament_code__icontains=term))
+        .order_by('-created_at')[:limit]
+    )
+
+    players = (
+        User.objects.filter(
+            league_memberships__league=league,
+            league_memberships__is_active=True,
+            username__icontains=term,
+        )
+        .distinct()
+        .order_by('username')[:limit]
+    )
+
+    matches = (
+        Match.objects.filter(league=league)
+        .filter(
+            Q(home_user__username__icontains=term)
+            | Q(away_user__username__icontains=term)
+            | Q(home_team__name__icontains=term)
+            | Q(away_team__name__icontains=term)
+        )
+        .select_related('home_user', 'away_user', 'home_team', 'away_team', 'round')
+        .order_by('-created_at')[:limit]
+    )
+
+    return {
+        'query': term,
+        'teams': [
+            {
+                'id': t.id,
+                'name': t.name,
+                'short_name': t.short_name,
+                'logo': t.logo.url if t.logo else None,
+                'game': t.game,
+            }
+            for t in teams
+        ],
+        'tournaments': [
+            {
+                'id': t.id,
+                'name': t.name,
+                'tournament_code': t.tournament_code,
+                'status': t.status,
+                'format': t.format,
+            }
+            for t in tournaments
+        ],
+        'players': [
+            {
+                'id': u.id,
+                'username': u.username,
+                'display_name': u.get_full_name() or u.username,
+            }
+            for u in players
+        ],
+        'matches': [
+            {
+                'id': m.id,
+                'home_display': m.home_display,
+                'away_display': m.away_display,
+                'home_score': m.home_score,
+                'away_score': m.away_score,
+                'status': m.status,
+                'scheduled_at': m.scheduled_at,
+                'round_name': m.round.name if m.round_id else None,
+            }
+            for m in matches
+        ],
+    }

@@ -9,5 +9,6 @@ urlpatterns = [
     path('leagues/<int:league_id>/dashboard/pending-reviews/', views.PendingReviewsView.as_view(), name='dashboard-pending-reviews'),
     path('leagues/<int:league_id>/dashboard/activity/', views.RecentActivityView.as_view(), name='dashboard-activity'),
     path('leagues/<int:league_id>/dashboard/standings/', views.PlayerStandingsView.as_view(), name='dashboard-standings'),
+    path('leagues/<int:league_id>/search/', views.LeagueSearchView.as_view(), name='league-search'),
     path('dashboard/platform/', views.PlatformOverviewView.as_view(), name='dashboard-platform'),
 ]

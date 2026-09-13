@@ -120,3 +120,26 @@ class PlatformOverviewView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         return Response(services.platform_overview())
+
+
+class LeagueSearchView(APIView):
+    """Search one league's teams, tournaments, players and fixtures.
+
+    Restricted to active members: results reveal the names of a league's teams
+    and players, which is not public information.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, league_id, *args, **kwargs):
+        league = _get_member_league(request, league_id)
+
+        raw_limit = request.query_params.get('limit', 8)
+        try:
+            limit = max(1, min(int(raw_limit), 25))
+        except (TypeError, ValueError):
+            limit = 8
+
+        return Response(services.search_league(
+            league, request.query_params.get('q', ''), limit=limit
+        ))

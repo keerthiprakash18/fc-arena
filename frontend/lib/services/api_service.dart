@@ -12,6 +12,7 @@ import '../models/award.dart';
 import '../models/category.dart';
 import '../models/team.dart';
 import '../models/group.dart';
+import '../models/search.dart';
 
 class ApiService {
   final ApiClient _client;
@@ -620,6 +621,20 @@ class ApiService {
   /// Rebuild the league's records from its verified matches. Owner/admin only.
   Future<Map<String, dynamic>> recomputeRecords(int leagueId) async {
     return _client.post('/leagues/$leagueId/records/recompute/', {});
+  }
+
+  // ─── Search ──────────────────────────────────────────
+  /// League-wide search across teams, tournaments, players and fixtures.
+  ///
+  /// An empty query is answered locally rather than round-tripping: the server
+  /// returns empty buckets for it anyway, and the UI already knows that.
+  Future<SearchResults> searchLeague(int leagueId, String query) async {
+    final term = query.trim();
+    if (term.isEmpty) return SearchResults.empty();
+
+    final data = await _client
+        .get('/leagues/$leagueId/search/?q=${Uri.encodeQueryComponent(term)}');
+    return SearchResults.fromJson(data);
   }
 
   // ─── Ratings ─────────────────────────────────────────
