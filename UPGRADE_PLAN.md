@@ -277,8 +277,21 @@ splits, AUTO vs MANUAL award badges, a league picker and the admin actions.
 - **Mojibake in 8 screens** — double-encoded UTF-8 dashes, bullets, rupee signs
   and a fallback emoji that rendered as `ðŸŽ–ï¸`.
 
+### Phase 6 — Search, dashboard, live match, polish
+- **Global search** — `/api/search/` queries across every league the user belongs
+  to; results grouped by league with context. SearchScreen gained an "All Leagues"
+  dropdown option.
+- **Tournament dashboard** — `/dashboard/` endpoint returns participant counts,
+  match status breakdown, total/average goals, progress percent, top scorer from
+  match events, and recent fixtures. Frontend screen uses ProgressRing, animated
+  counters, and responsive metric grids.
+- **Live match screen** — Dedicated match view with an oversized scoreboard,
+  chronological event timeline (goals, cards, assists, saves), and a full-screen
+  goal celebration overlay with confetti particles and a pulsing "GOAL!" label.
+  Accessible from any match detail via a "Live View" button.
+- **Responsive breakpoints** — Already in place via `Breakpoints`, `ContentWidth`,
+  `AdaptiveGrid`, and `ResponsiveRow`; used consistently across new screens.
+
 ### Remaining
-- Phase 6: global search, tournament dashboard aggregates, live match screen
-  with goal animation, responsive breakpoints
-- Push is blocked: no credentials in the session, so four commits are local only
+- Push is blocked: no credentials in the session, so five commits are local only
 
