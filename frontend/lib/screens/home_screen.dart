@@ -309,19 +309,27 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: FCColors.surface,
+        backgroundColor: FCColors.surface.withOpacity(0.95),
         title: Row(children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               gradient: FCGradients.accent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(color: FCColors.accent.withOpacity(0.25), blurRadius: 12, spreadRadius: 2),
+              ],
             ),
-            child: const Icon(Icons.sports_soccer, size: 18, color: Colors.white),
+            child: const Icon(Icons.sports_soccer, size: 20, color: Colors.white),
           ),
-          const SizedBox(width: 10),
-          const Text('FC Harina', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1.5, fontSize: 17)),
+          const SizedBox(width: 12),
+          ShaderMask(
+            shaderCallback: (bounds) {
+              return const LinearGradient(colors: [FCColors.white, FCColors.accentBright]).createShader(bounds);
+            },
+            child: const Text('FC HARINA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 18)),
+          ),
         ]),
         actions: [
           _notifBell(),
@@ -610,61 +618,52 @@ class _HomeScreenState extends State<HomeScreen> {
       onRefresh: _loadOverview,
       color: FCColors.accent,
       child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
         children: [
-          const SizedBox(height: 48),
+          const SizedBox(height: 40),
           Center(
             child: Container(
-              width: 88,
-              height: 88,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
                 gradient: FCGradients.accent,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(color: FCColors.accent.withOpacity(0.3), blurRadius: 40, spreadRadius: 6),
+                ],
               ),
-              child: const Icon(Icons.emoji_events, size: 44, color: Colors.white),
+              child: const Icon(Icons.emoji_events, size: 48, color: Colors.white),
             ),
           ),
-          const SizedBox(height: 24),
-          const Text(
-            'Welcome to FC Harina',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white),
+          const SizedBox(height: 28),
+          ShaderMask(
+            shaderCallback: (bounds) {
+              return const LinearGradient(colors: [FCColors.white, FCColors.accentBright]).createShader(bounds);
+            },
+            child: const Text(
+              'Welcome to FC Harina',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white),
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
-            'You are not in a league yet. Create one and share its invite code with your players, or join a league using a code you were given.',
+            'Create your own football league and invite players, or join an existing league with an invite code.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, height: 1.5, color: FCColors.white50),
+            style: TextStyle(fontSize: 14, height: 1.6, color: FCColors.white40),
           ),
-          const SizedBox(height: 32),
-          SizedBox(
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: _showCreateLeagueDialog,
-              icon: const Icon(Icons.add_circle_outline, size: 20),
-              label: const Text('CREATE A LEAGUE',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: FCColors.accent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
+          const SizedBox(height: 40),
+          FCActionButton(
+            label: 'CREATE A LEAGUE',
+            onPressed: _showCreateLeagueDialog,
+            icon: Icons.add_circle_outline,
           ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 52,
-            child: OutlinedButton.icon(
-              onPressed: _showJoinLeagueDialog,
-              icon: const Icon(Icons.vpn_key_outlined, size: 20),
-              label: const Text('JOIN WITH INVITE CODE',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1)),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: FCColors.accent,
-                side: BorderSide(color: FCColors.accent.withValues(alpha: 0.5)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
+          const SizedBox(height: 16),
+          FCActionButton(
+            label: 'JOIN WITH INVITE CODE',
+            onPressed: _showJoinLeagueDialog,
+            icon: Icons.vpn_key_outlined,
+            isSecondary: true,
           ),
         ],
       ),
@@ -681,21 +680,35 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(greeting, style: TextStyle(fontSize: 13, color: FCColors.white30)),
-              const SizedBox(height: 4),
-              Text(
-                user?.displayName ?? 'Player',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
+              Text(greeting, style: TextStyle(fontSize: 13, color: FCColors.white40, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 6),
+              ShaderMask(
+                shaderCallback: (bounds) {
+                  return const LinearGradient(colors: [FCColors.white, FCColors.accentBright]).createShader(bounds);
+                },
+                child: Text(
+                  user?.displayName ?? 'Player',
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white),
+                ),
               ),
             ],
           ),
         ),
-        CircleAvatar(
-          radius: 22,
-          backgroundColor: FCColors.accent.withValues(alpha: 0.2),
-          child: Text(
-            (user?.username ?? 'U')[0].toUpperCase(),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: FCColors.accent),
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [FCColors.accent.withOpacity(0.2), FCColors.purple.withOpacity(0.15)],
+            ),
+            shape: BoxShape.circle,
+            border: Border.all(color: FCColors.accent.withOpacity(0.25), width: 1.5),
+          ),
+          child: Center(
+            child: Text(
+              (user?.username ?? 'U')[0].toUpperCase(),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: FCColors.accent),
+            ),
           ),
         ),
       ],
@@ -886,18 +899,35 @@ class _HomeScreenState extends State<HomeScreen> {
       children: actions.map((a) => GestureDetector(
         onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => a.screen)),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: a.color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: a.color.withValues(alpha: 0.2)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                a.color.withOpacity(0.08),
+                a.color.withOpacity(0.03),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: a.color.withOpacity(0.15), width: 1),
+            boxShadow: [
+              BoxShadow(color: a.color.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4)),
+            ],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(a.icon, color: a.color, size: 24),
-              const SizedBox(height: 6),
-              Text(a.label, style: TextStyle(color: a.color, fontSize: 10, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: a.color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(a.icon, color: a.color, size: 22),
+              ),
+              const SizedBox(height: 8),
+              Text(a.label, style: TextStyle(color: a.color.withOpacity(0.9), fontSize: 11, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
             ],
           ),
         ),

@@ -43,14 +43,12 @@ class _LoginScreenState extends State<LoginScreen> {
           content: Text(auth.error ?? 'Login failed'),
           backgroundColor: FCColors.red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       );
     }
   }
 
-  /// Escape hatch: if the app can't reach the server the user can point it
-  /// somewhere else (LAN IP, tunnel, deployed host) without rebuilding.
   Future<void> _editServerUrl() async {
     final controller = TextEditingController(text: apiBaseUrl);
     String? probeResult;
@@ -60,16 +58,17 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
           backgroundColor: FCColors.surface,
-          title: const Text('API Server', style: TextStyle(color: Colors.white)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('API Server', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Where should the app look for the FC Harina API?',
-                style: TextStyle(fontSize: 12, color: FCColors.white50),
+                style: TextStyle(fontSize: 13, color: FCColors.white60),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 style: const TextStyle(color: Colors.white, fontSize: 14),
@@ -79,12 +78,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               if (probeResult != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Text(
                   probeResult!,
                   style: TextStyle(
-                    fontSize: 12,
-                    color: probeResult!.startsWith('Connected') ? FCColors.accent : FCColors.red,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: probeResult!.startsWith('Connected') ? FCColors.green : FCColors.red,
                   ),
                 ),
               ],
@@ -96,11 +96,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 final msg = await apiClient.checkConnection();
                 setDialogState(() => probeResult = msg);
               },
-              child: Text('TEST', style: TextStyle(color: FCColors.white50)),
+              child: Text('TEST', style: TextStyle(color: FCColors.white60, fontWeight: FontWeight.w700)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text('CANCEL', style: TextStyle(color: FCColors.white50)),
+              child: Text('CANCEL', style: TextStyle(color: FCColors.white40)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -109,10 +109,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 await setApiBaseUrl(value);
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: FCColors.accent,
-                foregroundColor: Colors.white,
-              ),
               child: const Text('SAVE'),
             ),
           ],
@@ -126,107 +122,190 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: FCGradients.pitch),
+        decoration: const BoxDecoration(gradient: FCGradients.hero),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: IconButton(
-                        tooltip: 'API server',
-                        icon: Icon(Icons.settings_ethernet, color: FCColors.white50, size: 20),
-                        onPressed: _editServerUrl,
-                      ),
+          child: Stack(
+            children: [
+              // Background decorative circles
+              Positioned(
+                top: -80,
+                right: -60,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [FCColors.accent.withOpacity(0.06), Colors.transparent],
                     ),
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: FCGradients.accent,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: FCColors.accent.withValues(alpha: 0.3),
-                            blurRadius: 24,
-                            spreadRadius: 4,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(Icons.sports_soccer, size: 40, color: Colors.white),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -100,
+                left: -80,
+                child: Container(
+                  width: 250,
+                  height: 250,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [FCColors.purple.withOpacity(0.05), Colors.transparent],
                     ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'FC Harina',
-                      style: TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 6,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Football Tournament Platform',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: FCColors.accent.withValues(alpha: 0.7),
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 48),
-                    _buildField(_usernameController, 'Username', Icons.person_outline, false),
-                    const SizedBox(height: 16),
-                    _buildField(_passwordController, 'Password', Icons.lock_outline, true),
-                    const SizedBox(height: 28),
-                    Consumer<AuthProvider>(
-                      builder: (context, auth, _) => SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: auth.isLoading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: FCColors.accent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            elevation: 0,
-                          ),
-                          child: auth.isLoading
-                              ? const SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                                )
-                              : const Text(
-                                  'SIGN IN',
-                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 2),
-                                ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
+                  ),
+                ),
+              ),
+              // Content
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Don't have an account?", style: TextStyle(color: FCColors.white30, fontSize: 13)),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegisterScreen())),
-                          child: const Text(
-                            'Register',
-                            style: TextStyle(color: FCColors.accent, fontWeight: FontWeight.w700),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            tooltip: 'API server',
+                            icon: Icon(Icons.settings_ethernet, color: FCColors.white40, size: 20),
+                            onPressed: _editServerUrl,
                           ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Logo
+                        Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            gradient: FCGradients.accent,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: FCColors.accent.withOpacity(0.3),
+                                blurRadius: 30,
+                                spreadRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.sports_soccer, size: 44, color: Colors.white),
+                        ),
+                        const SizedBox(height: 28),
+                        ShaderMask(
+                          shaderCallback: (bounds) {
+                            return const LinearGradient(
+                              colors: [FCColors.white, FCColors.accentBright],
+                            ).createShader(bounds);
+                          },
+                          child: const Text(
+                            'FC HARINA',
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 8,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Football Tournament Platform',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: FCColors.accent.withOpacity(0.7),
+                            letterSpacing: 1,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 48),
+                        // Input fields
+                        _buildField(_usernameController, 'Username', Icons.person_outline, false),
+                        const SizedBox(height: 16),
+                        _buildField(_passwordController, 'Password', Icons.lock_outline, true),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {},
+                            child: Text(
+                              'Forgot Password?',
+                              style: TextStyle(color: FCColors.white40, fontSize: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Login button
+                        Consumer<AuthProvider>(
+                          builder: (context, auth, _) => SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: auth.isLoading ? null : _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: FCColors.accent,
+                                foregroundColor: FCColors.pitch,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                elevation: 0,
+                              ),
+                              child: auth.isLoading
+                                  ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(color: FCColors.pitch, strokeWidth: 2.5),
+                                    )
+                                  : const Text(
+                                      'SIGN IN',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        // Divider
+                        Row(
+                          children: [
+                            Expanded(child: Divider(color: FCColors.white10)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text('or', style: TextStyle(color: FCColors.white40, fontSize: 13)),
+                            ),
+                            Expanded(child: Divider(color: FCColors.white10)),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        // Register link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don't have an account?",
+                              style: TextStyle(color: FCColors.white40, fontSize: 14),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                              ),
+                              child: const Text(
+                                'Create Account',
+                                style: TextStyle(
+                                  color: FCColors.accent,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -243,7 +322,11 @@ class _LoginScreenState extends State<LoginScreen> {
         prefixIcon: Icon(icon, size: 20),
         suffixIcon: isPassword
             ? IconButton(
-                icon: Icon(_obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 20),
+                icon: Icon(
+                  _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                  size: 20,
+                  color: FCColors.white40,
+                ),
                 onPressed: () => setState(() => _obscure = !_obscure),
               )
             : null,

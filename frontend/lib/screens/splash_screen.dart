@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'dart:math' show pi;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
@@ -18,15 +18,45 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   late AnimationController _controller;
   late Animation<double> _fadeAnim;
   late Animation<double> _scaleAnim;
+  late Animation<double> _rotateAnim;
   late Animation<double> _slideAnim;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000));
-    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: const Interval(0, 0.5, curve: Curves.easeIn)));
-    _scaleAnim = Tween<double>(begin: 0.3, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: const Interval(0, 0.6, curve: Curves.elasticOut)));
-    _slideAnim = Tween<double>(begin: 30, end: 0).animate(CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+
+    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
+    );
+
+    _scaleAnim = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.1, 0.6, curve: Curves.elasticOut),
+      ),
+    );
+
+    _rotateAnim = Tween<double>(begin: -0.3, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.1, 0.5, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _slideAnim = Tween<double>(begin: 40, end: 0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
+
     _controller.forward();
     _navigate();
   }
@@ -34,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Future<void> _navigate() async {
     Widget next;
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 3));
       if (!mounted) return;
       final prefs = await SharedPreferences.getInstance();
       final done = prefs.getBool('onboarding_done') ?? false;
@@ -55,7 +85,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => next),
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) => next,
+        transitionsBuilder: (_, animation, __, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 600),
+      ),
     );
   }
 
@@ -69,77 +105,142 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: FCGradients.pitch),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fadeAnim,
-            child: ScaleTransition(
-              scale: _scaleAnim,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      gradient: FCGradients.accent,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: FCColors.accent.withValues(alpha: 0.4),
-                          blurRadius: 40,
-                          spreadRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.sports_soccer, size: 56, color: Colors.white),
+        decoration: const BoxDecoration(gradient: FCGradients.hero),
+        child: Stack(
+          children: [
+            // Background decorative elements
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      FCColors.accent.withOpacity(0.08),
+                      Colors.transparent,
+                    ],
                   ),
-                  const SizedBox(height: 28),
-                  const Text(
-                    'FC Harina',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 8,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  AnimatedBuilder(
-                    animation: _slideAnim,
-                    builder: (context, child) {
-                      return Transform.translate(
-                        offset: Offset(0, _slideAnim.value),
-                        child: Opacity(
-                          opacity: _slideAnim.value > 29.0 ? 0 : 1,
-                          child: Text(
-                            'FOOTBALL TOURNAMENT PLATFORM',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: FCColors.accent.withValues(alpha: 0.8),
-                              letterSpacing: 4,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 48),
-                  SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      color: FCColors.accent,
-                      strokeWidth: 2.5,
-                      backgroundColor: FCColors.white10,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+            Positioned(
+              bottom: -150,
+              left: -150,
+              child: Container(
+                width: 400,
+                height: 400,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      FCColors.purple.withOpacity(0.06),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Main content
+            Center(
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ScaleTransition(
+                      scale: _scaleAnim,
+                      child: RotationTransition(
+                        turns: _rotateAnim,
+                        child: _buildLogo(),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    AnimatedBuilder(
+                      animation: _slideAnim,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(0, _slideAnim.value),
+                          child: child,
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          ShaderMask(
+                            shaderCallback: (bounds) {
+                              return const LinearGradient(
+                                colors: [FCColors.white, FCColors.accentBright],
+                              ).createShader(bounds);
+                            },
+                            child: const Text(
+                              'FC HARINA',
+                              style: TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: 10,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'FOOTBALL TOURNAMENT PLATFORM',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: FCColors.accent.withOpacity(0.7),
+                              letterSpacing: 4,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 64),
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(
+                        color: FCColors.accent,
+                        strokeWidth: 2.5,
+                        backgroundColor: FCColors.white10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        gradient: FCGradients.accent,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: FCColors.accent.withOpacity(0.35),
+            blurRadius: 50,
+            spreadRadius: 8,
+          ),
+          BoxShadow(
+            color: FCColors.accent.withOpacity(0.1),
+            blurRadius: 80,
+            spreadRadius: 20,
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.sports_soccer,
+        size: 60,
+        color: Colors.white,
       ),
     );
   }
