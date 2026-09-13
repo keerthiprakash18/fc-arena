@@ -1,4 +1,4 @@
-package com.example.frontend
+package com.fcarena.app
 
 import io.flutter.embedding.android.FlutterActivity
 
