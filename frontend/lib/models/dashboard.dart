@@ -1,5 +1,5 @@
 // ============================================================
-// FC ARENA — LEAGUE / TOURNAMENT OVERVIEW
+// FC HARINA — LEAGUE / TOURNAMENT OVERVIEW
 // ============================================================
 
 class LeagueOverview {
@@ -61,7 +61,7 @@ class LeagueOverview {
 
 
 // ============================================================
-// FC ARENA — NOTIFICATIONS
+// FC HARINA — NOTIFICATIONS
 // ============================================================
 
 class NotificationItem {
@@ -108,7 +108,7 @@ class NotificationItem {
 
 
 // ============================================================
-// FC ARENA — AI VERIFICATION TASK
+// FC HARINA — AI VERIFICATION TASK
 // ============================================================
 
 class VerificationTask {
@@ -186,7 +186,7 @@ class VerificationTask {
 
 
 // ============================================================
-// FC ARENA — AI EXTRACTION RESULT
+// FC HARINA — AI EXTRACTION RESULT
 // ============================================================
 
 class ExtractionResultItem {
@@ -235,7 +235,7 @@ class ExtractionResultItem {
 
 
 // ============================================================
-// FC ARENA — ADMIN REVIEW ITEM
+// FC HARINA — ADMIN REVIEW ITEM
 // ============================================================
 
 class AdminReviewItem {
@@ -287,7 +287,7 @@ class AdminReviewItem {
 
 
 // ============================================================
-// FC ARENA — PENDING REVIEWS
+// FC HARINA — PENDING REVIEWS
 // ============================================================
 
 class PendingReviewsData {
@@ -331,7 +331,7 @@ class PendingReviewsData {
 
 
 // ============================================================
-// FC ARENA — SAFE JSON HELPERS
+// FC HARINA — SAFE JSON HELPERS
 // ============================================================
 
 Map<String, dynamic> _map(dynamic value) {

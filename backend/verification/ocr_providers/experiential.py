@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
-    "You are an expert OCR engine for FC Arena, an eSports competitive gaming platform. "
+    "You are an expert OCR engine for FC Harina, an eSports competitive gaming platform. "
     "You analyze post-match result screenshots from mobile games. "
     "Extract ONLY the final match score and overall confidence. "
     "Return STRICT JSON with NO markdown, NO code fences, NO extra text:\n"
@@ -124,7 +124,7 @@ class ExperientialOCRProvider:
                         {
                             'type': 'text',
                             'text': (
-                                'Analyze this FC Arena match result screenshot. '
+                                'Analyze this FC Harina match result screenshot. '
                                 'Extract the final home and away scores. '
                                 'Return ONLY the JSON response as specified in the system prompt.'
                             ),

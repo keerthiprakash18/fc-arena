@@ -1,4 +1,4 @@
-# FC ARENA — Production Deployment Guide
+# FC Harina — Production Deployment Guide
 
 Everything is pre-configured in this repo. You only need free-tier cloud accounts and ~1–2 hours for your first launch.
 

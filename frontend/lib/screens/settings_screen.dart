@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Base URL of the FC ARENA API (include /api).',
+                'Base URL of the FC Harina API (include /api).',
                 style: TextStyle(fontSize: 12, color: FCColors.white50),
               ),
               const SizedBox(height: 12),
@@ -185,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
             child: Column(children: [
-              Text('FC ARENA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.8))),
+              Text('FC Harina', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.8))),
               const SizedBox(height: 4),
               Text('Esports Tournament Platform', style: TextStyle(fontSize: 12, color: FCColors.white30)),
             ]),

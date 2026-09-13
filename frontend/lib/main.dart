@@ -53,7 +53,7 @@ class FCArenaApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider(api)),
       ],
       child: MaterialApp(
-        title: 'FC ARENA',
+        title: 'FC Harina',
         debugShowCheckedModeBanner: false,
         theme: FCTheme.dark,
         home: const SplashScreen(),

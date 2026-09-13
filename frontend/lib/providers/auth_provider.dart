@@ -39,7 +39,13 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      // A 401 from the login endpoint means the credentials were wrong — say
+      // so plainly instead of dumping DRF's raw detail string.
+      if (e is ApiException && e.statusCode == 401) {
+        _error = 'Invalid username or password.';
+      } else {
+        _error = e.toString();
+      }
       _loading = false;
       notifyListeners();
       return false;
@@ -55,7 +61,7 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      _user = await api.register(
+      await api.register(
         username: username,
         email: email,
         password: password,

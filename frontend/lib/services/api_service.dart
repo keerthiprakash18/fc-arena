@@ -29,7 +29,10 @@ class ApiService {
     return await getMe();
   }
 
-  Future<User> register({
+  /// Create a new account. On success the caller routes the user to the login
+  /// screen so they sign in explicitly — we deliberately do NOT auto-login
+  /// here, which also avoids fetching the profile before any token exists.
+  Future<void> register({
     required String username,
     required String email,
     required String password,
@@ -45,7 +48,6 @@ class ApiService {
       if (gameInGameName != null && gameInGameName.isNotEmpty) 'game_in_game_name': gameInGameName,
       if (phoneNumber != null && phoneNumber.isNotEmpty) 'phone_number': phoneNumber,
     });
-    return await login(username, password);
   }
 
   Future<User> getMe() async {

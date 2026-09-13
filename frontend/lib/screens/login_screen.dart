@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Where should the app look for the FC ARENA API?',
+                'Where should the app look for the FC Harina API?',
                 style: TextStyle(fontSize: 12, color: FCColors.white50),
               ),
               const SizedBox(height: 12),
@@ -162,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      'FC ARENA',
+                      'FC Harina',
                       style: TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.w900,

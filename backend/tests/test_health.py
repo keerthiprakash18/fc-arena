@@ -9,7 +9,7 @@ class ApiRootTests(TestCase):
         response = self.client.get('/api/')
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload['name'], 'FC ARENA API')
+        self.assertEqual(payload['name'], 'FC Harina API')
         self.assertEqual(payload['status'], 'ok')
         self.assertIn('/api/leagues/', payload['sections'])
         self.assertIn('/api/matches/', payload['sections'])

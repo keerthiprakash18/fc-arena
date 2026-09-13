@@ -1,10 +1,23 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
+/// Base URL of the Django API.
+///
+/// `10.0.2.2` is the Android-emulator alias for the host loopback — it is the
+/// correct address *only* inside an emulator. In a browser (web preview) or on
+/// desktop that address resolves to nothing and every request dies with
+/// "Failed to fetch". So the compile-time default is platform-aware:
+///   - web / desktop  -> 127.0.0.1 (the backend on the same machine)
+///   - android        -> 10.0.2.2   (emulator -> host)
+///
+/// Either can still be overridden at build time with
+/// `--dart-define=API_BASE_URL=https://your.host/api` or at runtime from the
+/// in-app "API Server" dialog on the login screen.
 const String defaultApiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://10.0.2.2:8000/api',
+  defaultValue: kIsWeb ? 'http://127.0.0.1:8000/api' : 'http://10.0.2.2:8000/api',
 );
 
 /// SharedPreferences key holding a user-chosen server URL.

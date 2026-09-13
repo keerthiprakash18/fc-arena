@@ -19,7 +19,7 @@ API_SECTIONS = [
 def api_root(request):
     """Human/health-friendly landing page at /api/ (also used by uptime checks)."""
     return JsonResponse({
-        'name': 'FC ARENA API',
+        'name': 'FC Harina API',
         'version': API_VERSION,
         'status': 'ok',
         'sections': [f'/api/{s}/' for s in API_SECTIONS],

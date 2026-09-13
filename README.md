@@ -1,4 +1,4 @@
-# FC ARENA — Esports Management Platform
+# FC Harina — Esports Management Platform
 
 A full-stack esports league & tournament management platform: Flutter frontend + Django REST backend, with AI-assisted match result verification.
 

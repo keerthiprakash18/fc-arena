@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../config/api.dart';
 import '../providers/auth_provider.dart';
 import '../models/dashboard.dart';
+import '../models/tournament.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/responsive.dart';
@@ -13,6 +14,7 @@ import 'login_screen.dart';
 import 'disputes_screen.dart';
 import 'seasons_screen.dart';
 import 'tournaments_screen.dart';
+import 'tournament_detail_screen.dart';
 import 'teams_screen.dart';
 import 'awards_screen.dart';
 import 'records_screen.dart';
@@ -31,10 +33,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   LeagueOverview? _overview;
+  List<Tournament> _tournaments = [];
   bool _loading = true;
   bool _noLeagues = false;
   String? _error;
   int _unread = 0;
+  int _leagueId = 0;
   final _api = ApiService(apiClient);
 
   @override
@@ -62,13 +66,24 @@ class _HomeScreenState extends State<HomeScreen> {
           _noLeagues = true;
           _error = null;
           _overview = null;
+          _tournaments = [];
+          _leagueId = 0;
         });
         return;
       }
-      final leagueId = leagues.first['id'];
+      final leagueId = leagues.first['id'] as int;
       final overview = await _api.getLeagueOverview(leagueId);
+      List<Tournament> tournaments = [];
+      try {
+        tournaments = await _api.getTournaments(leagueId);
+      } catch (_) {
+        // The pipeline can still render from the overview if tournaments fail.
+      }
+      if (!mounted) return;
       setState(() {
         _overview = overview;
+        _tournaments = tournaments;
+        _leagueId = leagueId;
         _loading = false;
         _noLeagues = false;
         _error = null;
@@ -76,6 +91,41 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       setState(() { _loading = false; _error = e.toString(); });
     }
+  }
+
+  /// The tournament the workflow pipeline focuses on: a live one first, else
+  /// the first in the list.
+  Tournament? get _featured {
+    if (_tournaments.isEmpty) return null;
+    final live = _tournaments.where((t) => t.status == 'IN_PROGRESS').toList();
+    if (live.isNotEmpty) return live.first;
+    return _tournaments.first;
+  }
+
+  /// Maps a tournament's state-machine status to the pipeline step (0-based)
+  /// the organiser should be working on right.
+  int _stepForStatus(String status) {
+    switch (status) {
+      case 'DRAFT': return 1;
+      case 'REGISTRATION_OPEN': return 2;
+      case 'REGISTRATION_CLOSED':
+      case 'SEEDING':
+      case 'FIXTURES_GENERATING': return 3;
+      case 'READY':
+      case 'IN_PROGRESS':
+      case 'SUSPENDED': return 4;
+      case 'COMPLETED': return 6;
+      default: return 0; // CANCELLED / unknown
+    }
+  }
+
+  Color _statusColor(String status) {
+    if (status == 'REGISTRATION_OPEN') return FCColors.amber;
+    if (status == 'IN_PROGRESS') return FCColors.accent;
+    if (status == 'COMPLETED') return FCColors.blue;
+    if (status == 'CANCELLED') return FCColors.red;
+    if (status == 'DRAFT') return FCColors.white30;
+    return FCColors.white50;
   }
 
   Future<void> _showCreateLeagueDialog() async {
@@ -98,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   labelText: 'League name',
-                  hintText: 'e.g. FC Arena Tamil',
+                  hintText: 'e.g. City Premier League',
                   prefixIcon: Icon(Icons.emoji_events_outlined, size: 20),
                 ),
               ),
@@ -271,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Icon(Icons.sports_soccer, size: 18, color: Colors.white),
           ),
           const SizedBox(width: 10),
-          const Text('FC ARENA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1.5, fontSize: 17)),
+          const Text('FC Harina', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1.5, fontSize: 17)),
         ]),
         actions: [
           _notifBell(),
@@ -303,6 +353,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildUserGreeting(),
                       const SizedBox(height: 16),
                       _buildLeagueCard(),
+                      const SizedBox(height: 16),
+                      _buildPipeline(),
+                      if (_tournaments.length > 1) ...[
+                        const SizedBox(height: 16),
+                        _buildTournamentsStrip(),
+                      ],
                       const SizedBox(height: 20),
                       const FCSectionHeader(title: 'STATISTICS'),
                       const SizedBox(height: 12),
@@ -318,6 +374,233 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
+    );
+  }
+
+  /// The centerpiece: a clear, connected tournament workflow. Each step is a
+  /// real, tappable action that deep-links into the screen that performs it,
+  /// and its state (done / next / upcoming) reflects the live tournament.
+  Widget _buildPipeline() {
+    final t = _featured;
+    final current = t == null ? 0 : _stepForStatus(t.status);
+    final labels = [
+      'Create Tournament',
+      'Manage Tournament',
+      'Add Teams',
+      'Generate Fixtures',
+      'Upload Results',
+      'Points Table',
+      'Knockout / Bracket',
+    ];
+    final subs = [
+      'Spin up a new competition',
+      'Open & configure the draw',
+      'Register the participants',
+      'Auto-schedule every match',
+      'Submit & verify the scores',
+      'Standings update automatically',
+      'Cup rounds decide the champion',
+    ];
+    final icons = [
+      Icons.add_circle_outline,
+      Icons.tune_outlined,
+      Icons.group_add_outlined,
+      Icons.sports_score_outlined,
+      Icons.cloud_upload_outlined,
+      Icons.table_chart_outlined,
+      Icons.emoji_events_outlined,
+    ];
+
+    return GlassCard(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: FCGradients.accent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.account_tree_outlined, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Tournament Workflow',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
+              ),
+              if (t != null) StatusBadge(text: t.statusLabel, color: _statusColor(t.status), small: true),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (t == null)
+            Text('No tournament yet — create your first one to kick off the workflow.',
+              style: TextStyle(fontSize: 13, color: FCColors.white50, height: 1.4))
+          else
+            Text('${t.name}  •  ${t.formatLabel}',
+              style: TextStyle(fontSize: 13, color: FCColors.accent.withValues(alpha: 0.85), fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          const PitchDivider(),
+          const SizedBox(height: 4),
+          ...List.generate(labels.length, (i) => _pipelineRow(i, labels[i], subs[i], icons[i], t, current)),
+          const SizedBox(height: 14),
+          _pipelineCta(t, current),
+        ],
+      ),
+    );
+  }
+
+  Widget _pipelineRow(int i, String label, String sub, IconData icon, Tournament? t, int current) {
+    final done = i < current;
+    final active = i == current;
+    final color = done
+        ? FCColors.accent
+        : active
+            ? FCColors.accentBright
+            : FCColors.white30;
+
+    void go() {
+      Widget screen;
+      if (i == 0) {
+        screen = const TournamentsScreen();
+      } else if (i == 4) {
+        screen = const MatchesScreen();
+      } else {
+        screen = t == null
+            ? const TournamentsScreen()
+            : TournamentDetailScreen(leagueId: _leagueId, tournamentId: t.id);
+      }
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: go,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          child: Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: done || active
+                      ? color.withValues(alpha: 0.15)
+                      : FCColors.white05,
+                  border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+                ),
+                child: Icon(done ? Icons.check_rounded : icon,
+                  color: color, size: 16),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                        color: active ? Colors.white : done ? FCColors.white70 : FCColors.white30)),
+                    const SizedBox(height: 1),
+                    Text(sub,
+                      style: TextStyle(fontSize: 11, color: FCColors.white30)),
+                  ],
+                ),
+              ),
+              if (active)
+                StatusBadge(text: 'NEXT', color: FCColors.accentBright, small: true),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _pipelineCta(Tournament? t, int current) {
+    final primary = t == null;
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          if (t == null) {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TournamentsScreen()));
+          } else {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => TournamentDetailScreen(leagueId: _leagueId, tournamentId: t.id),
+            ));
+          }
+        },
+        icon: Icon(primary ? Icons.add : Icons.open_in_new, size: 18),
+        label: Text(primary ? 'CREATE TOURNAMENT' : 'OPEN TOURNAMENT',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: FCColors.accent,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  /// Quick switcher between the league's tournaments (only shown when there
+  /// is more than one, so it never duplicates the pipeline above).
+  Widget _buildTournamentsStrip() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const FCSectionHeader(title: 'YOUR TOURNAMENTS'),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 92,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _tournaments.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (_, i) {
+              final t = _tournaments[i];
+              final isFeatured = _featured?.id == t.id;
+              return GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => TournamentDetailScreen(leagueId: _leagueId, tournamentId: t.id),
+                )),
+                child: Container(
+                  width: 150,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isFeatured ? FCColors.accent.withValues(alpha: 0.12) : FCColors.surfaceCard,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isFeatured ? FCColors.accent.withValues(alpha: 0.5) : FCColors.white10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(t.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+                      const SizedBox(height: 6),
+                      StatusBadge(text: t.statusLabel, color: _statusColor(t.status), small: true),
+                      const SizedBox(height: 6),
+                      Text('${t.participantCount}/${t.maxParticipants} teams',
+                        style: TextStyle(fontSize: 11, color: FCColors.white30)),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -343,7 +626,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 24),
           const Text(
-            'Welcome to FC ARENA',
+            'Welcome to FC Harina',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white),
           ),
@@ -444,9 +727,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(_overview!.leagueName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
                     const SizedBox(height: 2),
-                    Text('Code: ${_overview!.leagueCode}', style: TextStyle(fontSize: 12, color: FCColors.accent.withValues(alpha: 0.7))),
+                    Text('Code: ${_overview!.leagueCode}', style: TextStyle(fontSize: 12, color: FCColors.accent.withValues(alpha: 0.7)),
+                    ),
                   ],
                 ),
+              ),
+              OutlinedButton(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TournamentsScreen())),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: FCColors.accent,
+                  side: BorderSide(color: FCColors.accent.withValues(alpha: 0.4)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                ),
+                child: const Text('TOURNAMENTS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
               ),
             ],
           ),

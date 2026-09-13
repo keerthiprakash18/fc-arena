@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 class FCColors {
   FCColors._();
 
-  static const Color pitch = Color(0xFF0D1B0E);
-  static const Color pitchLight = Color(0xFF1A2E1C);
-  static const Color surface = Color(0xFF141E15);
-  static const Color surfaceLight = Color(0xFF1E2D1F);
-  static const Color surfaceCard = Color(0xFF1A2A1C);
-  static const Color accent = Color(0xFF2ECC71);
-  static const Color accentBright = Color(0xFF4ADE80);
-  static const Color accentDark = Color(0xFF1B8A4A);
-  static const Color gold = Color(0xFFF5C542);
+  // Manchester City-inspired: sky blue + navy football palette
+  static const Color pitch = Color(0xFF0A1428); // deep navy background
+  static const Color pitchLight = Color(0xFF0E1B33);
+  static const Color surface = Color(0xFF0E1B33); // navy surface
+  static const Color surfaceLight = Color(0xFF13203B);
+  static const Color surfaceCard = Color(0xFF13203B);
+  static const Color accent = Color(0xFF4DA8DA); // Man City sky blue
+  static const Color accentBright = Color(0xFF6CABDD); // lighter sky
+  static const Color accentDark = Color(0xFF2E7DA8); // deeper sky blue
+  static const Color sky = Color(0xFF6CABDD);
+  static const Color navy = Color(0xFF0A1428);
+  static const Color navyDeep = Color(0xFF070E1C);
+  static const Color gold = Color(0xFFF5C542); // premium gold accent
   static const Color goldDark = Color(0xFFC9A020);
   static const Color white = Colors.white;
   static const Color white70 = Color(0xB3FFFFFF);
@@ -26,8 +30,8 @@ class FCColors {
   static const Color cyan = Color(0xFF00BCD4);
   static const Color purple = Color(0xFF9B59B6);
   static const Color teal = Color(0xFF1ABC9C);
-  static const Color divider = Color(0x1A2ECC71);
-  static const Color shimmer = Color(0x1A2ECC71);
+  static const Color divider = Color(0x1A4DA8DA);
+  static const Color shimmer = Color(0x1A4DA8DA);
 }
 
 class FCGradients {
@@ -36,17 +40,17 @@ class FCGradients {
   static const LinearGradient pitch = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF0D1B0E), Color(0xFF0A120B)],
+    colors: [Color(0xFF0A1428), Color(0xFF070E1C)],
   );
 
   static const LinearGradient card = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1A2A1C), Color(0xFF141E15)],
+    colors: [Color(0xFF13203B), Color(0xFF0E1B33)],
   );
 
   static const LinearGradient accent = LinearGradient(
-    colors: [Color(0xFF2ECC71), Color(0xFF1B8A4A)],
+    colors: [Color(0xFF6CABDD), Color(0xFF2E7DA8)],
   );
 
   static const LinearGradient gold = LinearGradient(
@@ -56,11 +60,11 @@ class FCGradients {
   static const LinearGradient hero = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF2ECC71), Color(0xFF1B8A4A), Color(0xFF0D1B0E)],
+    colors: [Color(0xFF4DA8DA), Color(0xFF2E7DA8), Color(0xFF0A1428)],
   );
 
   static const LinearGradient statusBar = LinearGradient(
-    colors: [Color(0xFF0D1B0E), Color(0xFF141E15)],
+    colors: [Color(0xFF0A1428), Color(0xFF0E1B33)],
   );
 }
 

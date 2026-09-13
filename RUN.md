@@ -1,4 +1,4 @@
-# FC ARENA — Run Guide
+# FC Harina — Run Guide
 
 How to get the **backend API**, the **web app**, and the **mobile app** running.
 For cloud deployment see `DEPLOYMENT.md`.
