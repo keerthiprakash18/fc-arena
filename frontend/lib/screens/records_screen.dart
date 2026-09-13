@@ -3,6 +3,7 @@ import '../config/api.dart';
 import '../models/award.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/responsive.dart';
 
 /// League records, split into who holds each record now and who held it before.
 ///
@@ -149,22 +150,40 @@ class _RecordsScreenState extends State<RecordsScreen> {
 
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView(
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(12),
-        children: [
-          if (_leagues.length > 1) _leaguePicker(),
-          if (_records.isEmpty) _emptyState() else ...[
-            if (_current.isNotEmpty) ...[
-              _sectionHeader('CURRENT HOLDERS', _current.length),
-              ..._current.map((r) => _recordCard(r, current: true)),
+        child: ContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_leagues.length > 1) _leaguePicker(),
+              if (_records.isEmpty)
+                _emptyState()
+              else ...[
+                if (_current.isNotEmpty) ...[
+                  _sectionHeader('CURRENT HOLDERS', _current.length),
+                  AdaptiveGrid(
+                    minItemWidth: 400,
+                    maxColumns: 3,
+                    children:
+                        _current.map((r) => _recordCard(r, current: true)).toList(),
+                  ),
+                ],
+                if (_past.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _sectionHeader('PREVIOUS HOLDERS', _past.length),
+                  AdaptiveGrid(
+                    minItemWidth: 400,
+                    maxColumns: 3,
+                    children:
+                        _past.map((r) => _recordCard(r, current: false)).toList(),
+                  ),
+                ],
+              ],
             ],
-            if (_past.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              _sectionHeader('PREVIOUS HOLDERS', _past.length),
-              ..._past.map((r) => _recordCard(r, current: false)),
-            ],
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }

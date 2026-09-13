@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../config/api.dart';
 import '../models/match.dart';
 import '../services/api_service.dart';
+import '../widgets/match_card.dart';
 import 'match_detail_screen.dart';
 
 class MatchScheduleScreen extends StatefulWidget {
@@ -61,9 +62,18 @@ class _MatchScheduleScreenState extends State<MatchScheduleScreen> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                         itemCount: _filtered.length,
-                        itemBuilder: (_, i) => _matchCard(_filtered[i]),
+                        itemBuilder: (_, i) => MatchCard(
+                          match: _filtered[i],
+                          index: i,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  MatchDetailScreen(matchId: _filtered[i].id),
+                            ),
+                          ),
+                        ),
                       ),
                     )),
             ]),
@@ -92,48 +102,6 @@ class _MatchScheduleScreenState extends State<MatchScheduleScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _matchCard(Match match) {
-    final color = match.status == 'VERIFIED' ? Colors.green
-        : match.status == 'SCHEDULED' ? Colors.blue
-            : match.status == 'CANCELLED' ? Colors.red
-                : Colors.amber;
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => MatchDetailScreen(matchId: match.id),
-      )),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: FCColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border(left: BorderSide(color: color, width: 4)),
-        ),
-        child: Row(children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(match.homeName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 4),
-            Text(match.awayName, style: TextStyle(fontSize: 14, color: FCColors.white50), overflow: TextOverflow.ellipsis),
-          ])),
-          Column(children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-              child: Text(
-                match.homeScore != null && match.awayScore != null
-                    ? '${match.homeScore} - ${match.awayScore}'
-                    : match.status.replaceAll('_', ' '),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(match.createdAt.substring(0, 10), style: TextStyle(fontSize: 11, color: FCColors.white30)),
-          ]),
-        ]),
       ),
     );
   }

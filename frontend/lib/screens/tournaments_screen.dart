@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../config/api.dart';
 import '../models/tournament.dart';
 import '../services/api_service.dart';
+import '../widgets/responsive.dart';
 import 'tournament_detail_screen.dart';
 
 class TournamentsScreen extends StatefulWidget {
@@ -124,10 +125,18 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
-                      child: ListView.builder(
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(12),
-                        itemCount: _tournaments.length,
-                        itemBuilder: (_, i) => _tournamentCard(_tournaments[i]),
+                        child: ContentWidth(
+                          child: AdaptiveGrid(
+                            minItemWidth: 400,
+                            maxColumns: 3,
+                            children: [
+                              for (final t in _tournaments) _tournamentCard(t),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
     );

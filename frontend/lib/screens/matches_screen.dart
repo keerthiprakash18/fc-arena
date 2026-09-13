@@ -3,6 +3,8 @@ import '../config/api.dart';
 import '../models/match.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/match_card.dart';
+import '../widgets/responsive.dart';
 import 'match_detail_screen.dart';
 import 'create_match_screen.dart';
 
@@ -77,10 +79,28 @@ class _MatchesScreenState extends State<MatchesScreen> {
                     ]))
                   : RefreshIndicator(
                       onRefresh: _loadMatches,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: _matches.length,
-                        itemBuilder: (_, i) => _matchCard(_matches[i]),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 90),
+                        child: ContentWidth(
+                          child: AdaptiveGrid(
+                            minItemWidth: 400,
+                            maxColumns: 3,
+                            children: [
+                              for (var i = 0; i < _matches.length; i++)
+                                MatchCard(
+                                  match: _matches[i],
+                                  index: i,
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => MatchDetailScreen(
+                                          matchId: _matches[i].id),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
       floatingActionButton: FloatingActionButton.extended(
@@ -94,71 +114,6 @@ class _MatchesScreenState extends State<MatchesScreen> {
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('New Match'),
-      ),
-    );
-  }
-
-  Widget _matchCard(Match match) {
-    final colors = {
-      'VERIFIED': Colors.green, 'SCHEDULED': Colors.blue, 'AWAITING_RESULT': Colors.orange,
-      'EVIDENCE_SUBMITTED': Colors.amber, 'ADMIN_REVIEW': Colors.purple, 'REJECTED': Colors.red,
-    };
-    final statusColor = colors[match.status] ?? Colors.grey;
-
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => MatchDetailScreen(matchId: match.id))),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: FCColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(children: [
-                      Flexible(child: Text(match.homeName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis)),
-                      if (match.isTeamMatch) ...[
-                        const SizedBox(width: 6),
-                        Icon(Icons.shield_outlined, size: 13, color: FCColors.white30),
-                      ],
-                    ]),
-                    const SizedBox(height: 2),
-                    Text(match.awayName, style: TextStyle(fontSize: 14, color: FCColors.white70), overflow: TextOverflow.ellipsis),
-                  ]),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
-                  child: Text(match.scoreDisplay, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: statusColor)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                  child: Text(match.status.replaceAll('_', ' '), style: TextStyle(fontSize: 11, color: statusColor, fontWeight: FontWeight.w600)),
-                ),
-                const Spacer(),
-                if (match.verifiedAt != null)
-                  Text('Verified', style: TextStyle(fontSize: 11, color: Colors.green.withValues(alpha: 0.7))),
-                if (match.tournamentId != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Icon(Icons.emoji_events, size: 14, color: Colors.amber.withValues(alpha: 0.7)),
-                  ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

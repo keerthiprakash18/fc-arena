@@ -3,6 +3,7 @@ import '../config/api.dart';
 import '../models/award.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/responsive.dart';
 
 /// League awards, honouring the difference between a trophy the league
 /// computed automatically and one an organizer awarded by hand.
@@ -140,13 +141,23 @@ class _AwardsScreenState extends State<AwardsScreen> {
 
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView(
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(12),
-        children: [
-          if (_leagues.length > 1) _leaguePicker(),
-          if (_awards.isEmpty) _emptyState(),
-          ..._awards.map(_awardCard),
-        ],
+        child: ContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_leagues.length > 1) _leaguePicker(),
+              if (_awards.isEmpty) _emptyState(),
+              AdaptiveGrid(
+                minItemWidth: 400,
+                maxColumns: 3,
+                children: _awards.map(_awardCard).toList(),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
