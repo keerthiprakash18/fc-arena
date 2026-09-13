@@ -119,7 +119,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      FCColors.accent.withOpacity(0.08),
+                      FCColors.accent.withValues(alpha:0.08),
                       Colors.transparent,
                     ],
                   ),
@@ -136,7 +136,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      FCColors.purple.withOpacity(0.06),
+                      FCColors.purple.withValues(alpha:0.06),
                       Colors.transparent,
                     ],
                   ),
@@ -189,7 +189,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                             'FOOTBALL TOURNAMENT PLATFORM',
                             style: TextStyle(
                               fontSize: 12,
-                              color: FCColors.accent.withOpacity(0.7),
+                              color: FCColors.accent.withValues(alpha:0.7),
                               letterSpacing: 4,
                               fontWeight: FontWeight.w600,
                             ),
@@ -226,12 +226,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: FCColors.accent.withOpacity(0.35),
+            color: FCColors.accent.withValues(alpha:0.35),
             blurRadius: 50,
             spreadRadius: 8,
           ),
           BoxShadow(
-            color: FCColors.accent.withOpacity(0.1),
+            color: FCColors.accent.withValues(alpha:0.1),
             blurRadius: 80,
             spreadRadius: 20,
           ),

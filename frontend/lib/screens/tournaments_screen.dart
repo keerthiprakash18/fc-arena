@@ -47,51 +47,94 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDState) => AlertDialog(
           backgroundColor: FCColors.surface,
-          title: const Text('New Tournament', style: TextStyle(color: Colors.white, fontSize: 18)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('New Tournament', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             TextField(
               controller: nameCtrl,
               style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(hintText: 'Tournament name', hintStyle: TextStyle(color: FCColors.white30)),
+              decoration: const InputDecoration(
+                labelText: 'Tournament name',
+                prefixIcon: Icon(Icons.emoji_events_outlined),
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             DropdownButtonFormField<String>(
               initialValue: format,
               dropdownColor: FCColors.surface,
               style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                label: const Text('Format', style: TextStyle(color: Colors.white54)),
-                filled: true, fillColor: FCColors.white05,
+              decoration: const InputDecoration(
+                labelText: 'Format',
+                prefixIcon: Icon(Icons.format_list_bulleted),
               ),
               isExpanded: true,
               items: const [
-                DropdownMenuItem(value: 'KNOCKOUT', child: Text('Knockout', style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'LEAGUE', child: Text('League', style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'GROUP_KNOCKOUT', child: Text('Group + Knockout', style: TextStyle(color: Colors.white))),
+                DropdownMenuItem(value: 'KNOCKOUT', child: Text('Knockout')),
+                DropdownMenuItem(value: 'LEAGUE', child: Text('League')),
+                DropdownMenuItem(value: 'GROUP_KNOCKOUT', child: Text('Group + Knockout')),
               ],
               onChanged: (v) { if (v != null) setDState(() => format = v); },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             TextField(
               controller: descCtrl,
               style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(hintText: 'Description', hintStyle: TextStyle(color: FCColors.white30)),
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                prefixIcon: Icon(Icons.notes_outlined),
+              ),
             ),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel', style: TextStyle(color: Colors.white54))),
-            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), style: ElevatedButton.styleFrom(backgroundColor: FCColors.accent), child: const Text('Create', style: TextStyle(color: Colors.white))),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('CANCEL', style: TextStyle(color: FCColors.white40)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('CREATE'),
+            ),
           ],
         ),
       ),
     );
     if (confirmed != true || nameCtrl.text.trim().isEmpty) return;
     try {
-      await _api.createTournament(_leagueId, name: nameCtrl.text.trim(), description: descCtrl.text.trim(), format: format, maxParticipants: maxP);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tournament created'), backgroundColor: Colors.green));
+      await _api.createTournament(_leagueId,
+          name: nameCtrl.text.trim(),
+          description: descCtrl.text.trim(),
+          format: format,
+          maxParticipants: maxP);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tournament created'), backgroundColor: FCColors.green),
+        );
+      }
       _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: $e'), backgroundColor: FCColors.red),
+        );
+      }
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'REGISTRATION_OPEN':
+        return FCColors.amber;
+      case 'IN_PROGRESS':
+        return FCColors.green;
+      case 'COMPLETED':
+        return FCColors.blue;
+      case 'CANCELLED':
+        return FCColors.red;
+      case 'DRAFT':
+        return FCColors.white40;
+      default:
+        return FCColors.accent;
     }
   }
 
@@ -100,37 +143,57 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
     return Scaffold(
       backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: FCColors.surface,
-        title: const Text('Tournaments', style: TextStyle(color: Colors.white)),
-        actions: [IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _load)],
+        backgroundColor: FCColors.surface.withValues(alpha: 0.95),
+        title: const Text('Tournaments'),
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _createTournament,
-        backgroundColor: FCColors.accent,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('New Tournament'),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: FCGradients.accent,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: FCColors.accent.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: _createTournament,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: const Icon(Icons.add, color: FCColors.pitch),
+          label: const Text('New Tournament', style: TextStyle(color: FCColors.pitch, fontWeight: FontWeight.w800)),
+        ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
+              ? FCErrorRetry(message: _error!, onRetry: _load)
               : _tournaments.isEmpty
-                  ? Center(
-                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.emoji_events_outlined, size: 64, color: FCColors.white15),
-                        const SizedBox(height: 16),
-                        Text('No tournaments yet', style: TextStyle(color: FCColors.white50)),
-                      ]),
+                  ? FCEmptyState(
+                      icon: Icons.emoji_events_outlined,
+                      title: 'No Tournaments Yet',
+                      subtitle: 'Create your first tournament to start organizing matches and tracking results.',
+                      action: FCActionButton(
+                        label: 'CREATE TOURNAMENT',
+                        onPressed: _createTournament,
+                        icon: Icons.add,
+                        isFullWidth: false,
+                      ),
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
+                      color: FCColors.accent,
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         child: ContentWidth(
                           child: AdaptiveGrid(
-                            minItemWidth: 400,
+                            minItemWidth: 380,
                             maxColumns: 3,
                             children: [
                               for (final t in _tournaments) _tournamentCard(t),
@@ -143,65 +206,88 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
   }
 
   Widget _tournamentCard(Tournament t) {
-    final color = t.status == 'REGISTRATION_OPEN'
-        ? Colors.amber
-        : t.status == 'IN_PROGRESS' ? Colors.green
-            : t.status == 'COMPLETED' ? Colors.blue : Colors.white54;
+    final color = _statusColor(t.status);
     return GestureDetector(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => TournamentDetailScreen(leagueId: _leagueId, tournamentId: t.id),
       )),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: FCColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+      child: GlassCard(
+        padding: const EdgeInsets.all(18),
+        borderColor: color.withValues(alpha: 0.15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.08)],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: color.withValues(alpha: 0.2)),
+                  ),
+                  child: Icon(Icons.emoji_events, color: color, size: 26),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                      ),
+                      const SizedBox(height: 3),
+                      Text('${t.formatLabel}  \u2022  ${t.code}',
+                          style: TextStyle(fontSize: 12, color: FCColors.white40)),
+                    ],
+                  ),
+                ),
+                FCStatusBadge(
+                  text: t.statusLabel,
+                  color: color,
+                  small: true,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(height: 1, decoration: BoxDecoration(gradient: FCGradients.pitchLine)),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                _cardStat(Icons.people, '${t.participantCount}/${t.maxParticipants}'),
+                const Spacer(),
+                if (t.entryFee > 0) ...[
+                  _cardStat(Icons.monetization_on, '\u20B9${t.entryFee.toStringAsFixed(0)}', color: FCColors.amber),
+                ],
+                if (t.prizePool > 0) ...[
+                  const SizedBox(width: 12),
+                  _cardStat(Icons.emoji_events, '\u20B9${t.prizePool.toStringAsFixed(0)}', color: FCColors.gold),
+                ],
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text('Created by ${t.createdBy}',
+                style: TextStyle(fontSize: 11, color: FCColors.white30)),
+          ],
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
-              child: Icon(Icons.emoji_events, color: color, size: 24),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(t.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 2),
-                Text('${t.formatLabel} • ${t.code}', style: TextStyle(fontSize: 12, color: FCColors.white50)),
-              ]),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4)),
-              child: Text(t.statusLabel, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
-            ),
-          ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            Icon(Icons.people, size: 14, color: FCColors.white30),
-            const SizedBox(width: 4),
-            Text('${t.participantCount}/${t.maxParticipants}', style: TextStyle(fontSize: 12, color: FCColors.white50)),
-            const Spacer(),
-            if (t.entryFee > 0) ...[
-              Icon(Icons.monetization_on, size: 14, color: Colors.amber.withValues(alpha: 0.5)),
-              const SizedBox(width: 4),
-              Text('₹${t.entryFee.toStringAsFixed(0)} entry', style: TextStyle(fontSize: 12, color: FCColors.white50)),
-            ],
-            if (t.prizePool > 0) ...[
-              const SizedBox(width: 12),
-              Icon(Icons.emoji_events, size: 14, color: Colors.amber),
-              const SizedBox(width: 4),
-              Text('₹${t.prizePool.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600)),
-            ],
-          ]),
-          const SizedBox(height: 8),
-          Text('Created by ${t.createdBy}', style: TextStyle(fontSize: 11, color: FCColors.white30)),
-        ]),
       ),
+    );
+  }
+
+  Widget _cardStat(IconData icon, String text, {Color? color}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color ?? FCColors.white40),
+        const SizedBox(width: 5),
+        Text(text, style: TextStyle(fontSize: 12, color: color ?? FCColors.white60, fontWeight: FontWeight.w600)),
+      ],
     );
   }
 }

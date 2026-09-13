@@ -56,175 +56,326 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = context.watch<AuthProvider>().user;
     return Scaffold(
       backgroundColor: FCColors.pitch,
-      appBar: AppBar(
-        backgroundColor: FCColors.surface,
-        title: const Text('My Profile', style: TextStyle(color: Colors.white)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.red),
-            onPressed: () => context.read<AuthProvider>().logout(),
-          ),
-        ],
-      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _profileHeader(user),
-                if (_isAdmin) ...[
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LeagueAdminScreen())),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                      ),
-                      child: const Row(children: [
-                        Icon(Icons.admin_panel_settings, color: Colors.amber, size: 22),
-                        SizedBox(width: 12),
-                        Text('LEAGUE ADMIN', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.amber, letterSpacing: 1)),
-                        Spacer(),
-                        Icon(Icons.chevron_right, color: Colors.amber),
-                      ]),
+          : CustomScrollView(
+              slivers: [
+                _buildAppBar(user),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_isAdmin) ...[
+                          _buildAdminCard(),
+                          const SizedBox(height: 20),
+                        ],
+                        if (_stats.isNotEmpty) ...[
+                          const FCSectionHeader(title: 'STATISTICS'),
+                          const SizedBox(height: 12),
+                          _buildStatsGrid(),
+                        ],
+                        if (_ratings.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          const FCSectionHeader(title: 'RATING'),
+                          const SizedBox(height: 12),
+                          _buildRatingCard(),
+                        ],
+                        if (_stats.isEmpty && _ratings.isEmpty) ...[
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                          FCEmptyState(
+                            icon: Icons.person_outline,
+                            title: 'No Stats Yet',
+                            subtitle: 'Play some matches to see your statistics and rating history here.',
+                          ),
+                        ],
+                        const SizedBox(height: 40),
+                      ],
                     ),
                   ),
-                ],
-                const SizedBox(height: 20),
-                if (_stats.isNotEmpty) ...[
-                  const Text('STATISTICS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 2)),
-                  const SizedBox(height: 8),
-                  _statsGrid(),
-                ],
-                if (_ratings.isNotEmpty) ...[
-                  const SizedBox(height: 20),
-                  const Text('RATING HISTORY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 2)),
-                  const SizedBox(height: 8),
-                  _ratingCard(),
-                ],
-                if (_stats.isEmpty && _ratings.isEmpty)
-                  Center(
-                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.15),
-                      Icon(Icons.person, size: 64, color: Colors.white.withValues(alpha: 0.15)),
-                      const SizedBox(height: 16),
-                      Text('No stats yet — play some matches!', style: TextStyle(color: FCColors.white50)),
-                    ]),
-                  ),
+                ),
               ],
             ),
     );
   }
 
-  Widget _profileHeader(User? user) {
+  Widget _buildAppBar(User? user) {
     final displayName = user?.displayName ?? 'Unknown';
     final photo = user?.profilePhoto;
     final email = user?.email ?? '';
     final isStaff = user?.isStaff ?? false;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [FCColors.surface, FCColors.surface],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
+    final initials = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+
+    return SliverAppBar(
+      expandedHeight: 280,
+      pinned: true,
+      backgroundColor: FCColors.surface.withValues(alpha: 0.95),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(gradient: FCGradients.hero),
+          child: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 48),
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    gradient: FCGradients.accent,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: FCColors.accent.withValues(alpha: 0.3),
+                        blurRadius: 30,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                    border: Border.all(color: FCColors.white20, width: 2),
+                  ),
+                  child: (photo != null && photo.isNotEmpty)
+                      ? ClipOval(child: Image.network(photo, fit: BoxFit.cover))
+                      : Center(
+                          child: Text(
+                            initials,
+                            style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  displayName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+                if (email.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    email,
+                    style: TextStyle(fontSize: 14, color: FCColors.white60),
+                  ),
+                ],
+                if (isStaff) ...[
+                  const SizedBox(height: 10),
+                  FCStatusBadge(
+                    text: 'ADMIN',
+                    color: FCColors.gold,
+                    small: true,
+                    icon: Icons.verified,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
-        borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(children: [
-        CircleAvatar(
-          radius: 40,
-          backgroundColor: FCColors.accent,
-          backgroundImage: (photo != null && photo.isNotEmpty) ? NetworkImage(photo) : null,
-          child: (photo != null && photo.isNotEmpty) ? null : Text(
-            displayName[0].toUpperCase(),
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout, color: FCColors.red),
+          onPressed: () => context.read<AuthProvider>().logout(),
         ),
-        const SizedBox(height: 12),
-        Text(displayName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-        if ((user?.firstName != null && user!.firstName!.isNotEmpty) || (user?.lastName != null && user!.lastName!.isNotEmpty)) ...[
-          const SizedBox(height: 2),
-          Text([user.firstName, user.lastName].whereType<String>().where((s) => s.isNotEmpty).join(' '), style: TextStyle(fontSize: 13, color: FCColors.white70)),
-        ],
-        const SizedBox(height: 4),
-        Text(email, style: TextStyle(fontSize: 14, color: FCColors.white50)),
-        if (isStaff) ...[
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-            decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-            child: const Text('ADMIN', style: TextStyle(fontSize: 11, color: Colors.amber, fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ]),
+      ],
     );
   }
 
-  Widget _statsGrid() {
+  Widget _buildAdminCard() {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const LeagueAdminScreen()),
+      ),
+      child: GlassCard(
+        padding: const EdgeInsets.all(16),
+        borderColor: FCColors.gold.withValues(alpha: 0.2),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: FCColors.gold.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.admin_panel_settings, color: FCColors.gold, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'LEAGUE ADMIN',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: FCColors.gold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Manage league settings, members, and tournaments',
+                    style: TextStyle(fontSize: 12, color: FCColors.white40),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: FCColors.gold, size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid() {
     final s = _stats.first;
     final items = [
-      ('MP', '${s['matches_played'] ?? 0}', Colors.blue),
-      ('W', '${s['wins'] ?? 0}', Colors.green),
-      ('D', '${s['draws'] ?? 0}', Colors.amber),
-      ('L', '${s['losses'] ?? 0}', Colors.red),
-      ('GF', '${s['goals_scored'] ?? 0}', Colors.cyan),
-      ('GA', '${s['goals_conceded'] ?? 0}', Colors.redAccent),
-      ('CS', '${s['clean_sheets'] ?? 0}', Colors.teal),
-      ('Pts', '${s['points'] ?? 0}', Colors.purple),
+      ('Matches', '${s['matches_played'] ?? 0}', FCColors.blue, Icons.sports_soccer),
+      ('Wins', '${s['wins'] ?? 0}', FCColors.green, Icons.emoji_events),
+      ('Draws', '${s['draws'] ?? 0}', FCColors.amber, Icons.handshake),
+      ('Losses', '${s['losses'] ?? 0}', FCColors.red, Icons.close),
+      ('Goals', '${s['goals_scored'] ?? 0}', FCColors.cyan, Icons.sports),
+      ('Conceded', '${s['goals_conceded'] ?? 0}', FCColors.redDark, Icons.shield),
+      ('Clean Sheets', '${s['clean_sheets'] ?? 0}', FCColors.teal, Icons.lock),
+      ('Points', '${s['points'] ?? 0}', FCColors.purple, Icons.star),
     ];
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 0.9,
+      ),
       itemCount: items.length,
       itemBuilder: (_, i) => Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(10)),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(items[i].$1, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: items[i].$3.withValues(alpha: 0.7))),
-          const SizedBox(height: 2),
-          Text(items[i].$2, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: items[i].$3)),
-        ]),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              items[i].$3.withValues(alpha: 0.08),
+              items[i].$3.withValues(alpha: 0.02),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: items[i].$3.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(items[i].$4, size: 18, color: items[i].$3.withValues(alpha: 0.7)),
+            const SizedBox(height: 6),
+            Text(
+              items[i].$2,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: items[i].$3,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              items[i].$1,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: items[i].$3.withValues(alpha: 0.6),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _ratingCard() {
+  Widget _buildRatingCard() {
     final r = _ratings.first;
     final rating = safeDouble(r['rating'], fallback: 1000);
     final peak = safeDouble(r['peak_rating'], fallback: 1000);
     final matches = r['matches_rated'] ?? 0;
     final change = rating - 1000;
-    final color = change >= 0 ? Colors.green : Colors.red;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(12)),
-      child: Column(children: [
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(rating.toStringAsFixed(0), style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: color)),
-          const SizedBox(width: 6),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('RATING', style: TextStyle(fontSize: 11, color: FCColors.white50)),
-            Text('${change >= 0 ? '+' : ''}${change.toStringAsFixed(0)}', style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w600)),
-          ]),
-        ]),
-        const SizedBox(height: 12),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-          _miniStat('Peak', peak.toStringAsFixed(0)),
-          _miniStat('Matches', '$matches'),
-          _miniStat('Win Rate', '${(_stats.isNotEmpty ? _stats.first['win_rate'] ?? 0 : 0)}%'),
-        ]),
-      ]),
+    final color = change >= 0 ? FCColors.green : FCColors.red;
+
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                rating.toStringAsFixed(0),
+                style: TextStyle(
+                  fontSize: 52,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'RATING',
+                    style: TextStyle(fontSize: 12, color: FCColors.white40, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${change >= 0 ? '+' : ''}${change.toStringAsFixed(0)}',
+                      style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            height: 1,
+            decoration: BoxDecoration(gradient: FCGradients.pitchLine),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _miniStat('Peak Rating', peak.toStringAsFixed(0), FCColors.gold),
+              _miniStat('Matches', '$matches', FCColors.accent),
+              _miniStat('Win Rate', '${(_stats.isNotEmpty ? _stats.first['win_rate'] ?? 0 : 0)}%', FCColors.blue),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _miniStat(String label, String value) {
-    return Column(children: [
-      Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-      Text(label, style: TextStyle(fontSize: 11, color: FCColors.white30)),
-    ]);
+  Widget _miniStat(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: FCColors.white40, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
   }
 }
