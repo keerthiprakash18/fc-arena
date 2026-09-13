@@ -5,6 +5,7 @@ import '../config/api.dart';
 import '../models/match.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/num_utils.dart';
 import 'evidence_viewer_screen.dart';
 import 'live_match_screen.dart';
 
@@ -422,8 +423,8 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
 
   Widget _statBar(String label, dynamic home, dynamic away, String suffix) {
     if (home == null && away == null) return const SizedBox.shrink();
-    final h = (home ?? 0).toDouble();
-    final a = (away ?? 0).toDouble();
+    final h = safeDouble(home);
+    final a = safeDouble(away);
     final total = h + a;
     final hPct = total > 0 ? h / total : 0.5;
     return Padding(
