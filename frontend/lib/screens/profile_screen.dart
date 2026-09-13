@@ -5,6 +5,7 @@ import '../models/user.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/num_utils.dart';
 import 'league_admin_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -193,8 +194,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _ratingCard() {
     final r = _ratings.first;
-    final rating = (r['rating'] ?? 1000).toDouble();
-    final peak = (r['peak_rating'] ?? 1000).toDouble();
+    final rating = safeDouble(r['rating'], fallback: 1000);
+    final peak = safeDouble(r['peak_rating'], fallback: 1000);
     final matches = r['matches_rated'] ?? 0;
     final change = rating - 1000;
     final color = change >= 0 ? Colors.green : Colors.red;

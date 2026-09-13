@@ -1,3 +1,5 @@
+import '../utils/num_utils.dart';
+
 class Category {
   final int id;
   final int leagueId;
@@ -29,8 +31,9 @@ class Category {
     name: json['name'] ?? '',
     slug: json['slug'] ?? '',
     description: json['description'] ?? '',
-    minRating: (json['min_rating'] ?? 0).toDouble(),
-    maxRating: (json['max_rating'] ?? 99999).toDouble(),
+    // DRF serializes DecimalField as a quoted string — safeDouble handles both.
+    minRating: safeDouble(json['min_rating']),
+    maxRating: safeDouble(json['max_rating'], fallback: 99999),
     isActive: json['is_active'] ?? true,
     color: json['color'] ?? '#e94560',
     playerCount: json['player_count'] ?? 0,

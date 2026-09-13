@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/api.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/num_utils.dart';
 
 class PlayerProfileScreen extends StatefulWidget {
   final int userId;
@@ -99,8 +100,8 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   }
 
   Widget _ratingCard() {
-    final rating = (_rating!['rating'] ?? 1000).toDouble();
-    final peak = (_rating!['peak_rating'] ?? 1000).toDouble();
+    final rating = safeDouble(_rating!['rating'], fallback: 1000);
+    final peak = safeDouble(_rating!['peak_rating'], fallback: 1000);
     final matches = _rating!['matches_rated'] ?? 0;
     final change = rating - 1000;
     final color = change >= 0 ? Colors.green : Colors.red;

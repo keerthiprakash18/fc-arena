@@ -1,3 +1,5 @@
+import '../utils/num_utils.dart';
+
 class Tournament {
   final int id;
   final int leagueId;
@@ -50,8 +52,10 @@ class Tournament {
     format: json['format'] ?? 'KNOCKOUT',
     status: json['status'] ?? 'DRAFT',
     maxParticipants: json['max_participants'] ?? 16,
-    entryFee: (json['entry_fee'] ?? 0).toDouble(),
-    prizePool: (json['prize_pool'] ?? 0).toDouble(),
+    // DRF serializes DecimalField as a quoted string ("0.00") — go through
+    // safeDouble so the same code handles both numbers and strings.
+    entryFee: safeDouble(json['entry_fee']),
+    prizePool: safeDouble(json['prize_pool']),
     registrationDeadline: json['registration_deadline'],
     startDate: json['start_date'],
     endDate: json['end_date'],
