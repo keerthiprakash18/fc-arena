@@ -637,6 +637,21 @@ class ApiService {
     return SearchResults.fromJson(data);
   }
 
+  /// Global search across every league the user belongs to.
+  Future<SearchResults> searchGlobal(String query) async {
+    final term = query.trim();
+    if (term.isEmpty) return SearchResults.empty();
+
+    final data = await _client
+        .get('/search/?q=${Uri.encodeQueryComponent(term)}');
+    return SearchResults.fromJson(data);
+  }
+
+  // ─── Tournament Dashboard ─────────────────────────────
+  Future<Map<String, dynamic>> getTournamentDashboard(int leagueId, int tournamentId) async {
+    return _client.get('/leagues/$leagueId/tournaments/$tournamentId/dashboard/');
+  }
+
   // ─── Ratings ─────────────────────────────────────────
   Future<List<Map<String, dynamic>>> getRatings(int leagueId) async {
     final data = await _client.getList('/leagues/$leagueId/ratings/');

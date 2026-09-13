@@ -19,6 +19,7 @@ from .services import (
     create_groups,
     generate_fixtures,
     group_standings,
+    tournament_dashboard,
 )
 
 
@@ -367,3 +368,17 @@ class TournamentGroupAdvanceView(generics.GenericAPIView):
 
         return Response({'matches_created': created, 'message': message,
                          'status': tournament.status})
+
+
+class TournamentDashboardView(generics.GenericAPIView):
+    """Aggregate counts and leaders for a single tournament."""
+
+    permission_classes = [permissions.IsAuthenticated, IsTournamentLeagueMember]
+
+    def get(self, request, *args, **kwargs):
+        league_id = self.kwargs['league_id']
+        tournament_id = self.kwargs['tournament_id']
+        tournament = get_object_or_404(
+            Tournament, id=tournament_id, league_id=league_id
+        )
+        return Response(tournament_dashboard(tournament))

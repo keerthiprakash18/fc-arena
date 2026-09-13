@@ -328,3 +328,117 @@ def search_league(league, query, limit=8):
             for m in matches
         ],
     }
+
+
+def search_global(user_league_ids, query, limit=8):
+    """Search across all leagues a user belongs to.
+
+    Results are grouped by league so the UI can show provenance.
+    """
+    from teams.models import Team
+
+    term = (query or '').strip()
+    if not term:
+        return {'query': '', 'leagues': [], 'teams': [], 'tournaments': [], 'players': [], 'matches': []}
+
+    league_ids = list(user_league_ids)
+    if not league_ids:
+        return empty
+
+    leagues = League.objects.filter(id__in=league_ids)
+
+    # Aggregate across all member leagues.
+    teams = (
+        Team.objects.filter(league_id__in=league_ids, is_active=True)
+        .filter(Q(name__icontains=term) | Q(short_name__icontains=term) | Q(game__icontains=term))
+        .select_related('league')
+        .order_by('name')[:limit]
+    )
+
+    tournaments = (
+        Tournament.objects.filter(league_id__in=league_ids)
+        .filter(Q(name__icontains=term) | Q(tournament_code__icontains=term))
+        .select_related('league')
+        .order_by('-created_at')[:limit]
+    )
+
+    players = (
+        User.objects.filter(
+            league_memberships__league_id__in=league_ids,
+            league_memberships__is_active=True,
+            username__icontains=term,
+        )
+        .distinct()
+        .order_by('username')[:limit]
+    )
+
+    matches = (
+        Match.objects.filter(league_id__in=league_ids)
+        .filter(
+            Q(home_user__username__icontains=term)
+            | Q(away_user__username__icontains=term)
+            | Q(home_team__name__icontains=term)
+            | Q(away_team__name__icontains=term)
+        )
+        .select_related('home_user', 'away_user', 'home_team', 'away_team', 'round', 'league')
+        .order_by('-created_at')[:limit]
+    )
+
+    return {
+        'query': term,
+        'leagues': [
+            {
+                'id': lg.id,
+                'name': lg.name,
+                'code': lg.league_code,
+            }
+            for lg in leagues
+        ],
+        'teams': [
+            {
+                'id': t.id,
+                'name': t.name,
+                'short_name': t.short_name,
+                'logo': t.logo.url if t.logo else None,
+                'game': t.game,
+                'league_id': t.league_id,
+                'league_name': t.league.name,
+            }
+            for t in teams
+        ],
+        'tournaments': [
+            {
+                'id': t.id,
+                'name': t.name,
+                'tournament_code': t.tournament_code,
+                'status': t.status,
+                'format': t.format,
+                'league_id': t.league_id,
+                'league_name': t.league.name,
+            }
+            for t in tournaments
+        ],
+        'players': [
+            {
+                'id': u.id,
+                'username': u.username,
+                'display_name': u.get_full_name() or u.username,
+            }
+            for u in players
+        ],
+        'matches': [
+            {
+                'id': m.id,
+                'home_display': m.home_display,
+                'away_display': m.away_display,
+                'home_score': m.home_score,
+                'away_score': m.away_score,
+                'status': m.status,
+                'scheduled_at': m.scheduled_at,
+                'round_name': m.round.name if m.round_id else None,
+                'league_id': m.league_id,
+                'league_name': m.league.name,
+            }
+            for m in matches
+        ],
+    }

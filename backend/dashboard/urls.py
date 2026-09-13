@@ -10,5 +10,6 @@ urlpatterns = [
     path('leagues/<int:league_id>/dashboard/activity/', views.RecentActivityView.as_view(), name='dashboard-activity'),
     path('leagues/<int:league_id>/dashboard/standings/', views.PlayerStandingsView.as_view(), name='dashboard-standings'),
     path('leagues/<int:league_id>/search/', views.LeagueSearchView.as_view(), name='league-search'),
+    path('search/', views.GlobalSearchView.as_view(), name='global-search'),
     path('dashboard/platform/', views.PlatformOverviewView.as_view(), name='dashboard-platform'),
 ]

@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import 'bracket_view.dart';
 import 'group_stage_view.dart';
+import 'tournament_dashboard_screen.dart';
 
 class TournamentDetailScreen extends StatefulWidget {
   final int leagueId;
@@ -143,6 +144,28 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white70)))
               : ListView(padding: const EdgeInsets.all(16), children: [
                   _infoCard(),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 44,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TournamentDashboardScreen(
+                            leagueId: widget.leagueId,
+                            tournamentId: widget.tournamentId,
+                            tournamentName: _tournament!.name,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.dashboard_outlined, size: 18),
+                      label: const Text('DASHBOARD', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: FCColors.accent,
+                        side: BorderSide(color: FCColors.accent.withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
                   if (_tournament!.canRegister && !_isRegistered) ...[
                     const SizedBox(height: 16),
                     SizedBox(

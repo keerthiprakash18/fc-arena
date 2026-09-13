@@ -725,3 +725,118 @@ def advance_group_winners(tournament, per_group=DEFAULT_PER_GROUP_QUALIFIERS):
     tournament.status = 'IN_PROGRESS'
     tournament.save(update_fields=['status', 'updated_at'])
     return len(pairing), f'Advanced {len(pairing) * 2} qualifiers into {round_row.name}.'
+
+
+# ── Dashboard aggregates ────────────────────────────────────────────────────
+
+def tournament_dashboard(tournament):
+    """Aggregate counts and leaders for a single tournament.
+
+    All numbers come from the database; empty tournaments return zeros and
+    nulls rather than fabricated defaults.
+    """
+    from django.db.models import Count, Sum, Q
+    from statistics.models import PlayerLeagueStatistics
+    from matches.models import MatchEvent
+
+    participants = tournament.participants.all()
+    participant_counts = {
+        'total': participants.count(),
+        'registered': participants.filter(status='REGISTERED').count(),
+        'confirmed': participants.filter(status='CONFIRMED').count(),
+        'active': participants.filter(status='ACTIVE').count(),
+        'eliminated': participants.filter(status='ELIMINATED').count(),
+        'withdrawn': participants.filter(status='WITHDRAWN').count(),
+    }
+
+    matches = tournament.matches.all()
+    total_matches = matches.count()
+    verified_matches = matches.filter(status='VERIFIED').count()
+
+    status_breakdown = {
+        s: matches.filter(status=s).count()
+        for s in [
+            'SCHEDULED', 'AWAITING_RESULT', 'EVIDENCE_SUBMITTED',
+            'AI_PROCESSING', 'ADMIN_REVIEW', 'VERIFIED', 'REJECTED',
+            'DISPUTED', 'CANCELLED',
+        ]
+    }
+
+    scored = matches.filter(status='VERIFIED').exclude(home_score=None, away_score=None)
+    total_goals = scored.aggregate(
+        total=Sum('home_score') + Sum('away_score')
+    )['total'] or 0
+    avg_goals = round(total_goals / verified_matches, 2) if verified_matches else 0.0
+
+    # Top scorer from match events (goals only)
+    top_event_scorer = None
+    goal_events = MatchEvent.objects.filter(
+        match__tournament=tournament, event_type='GOAL'
+    ).values('player').annotate(goals=Count('id')).order_by('-goals').first()
+    if goal_events:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        player = User.objects.filter(id=goal_events['player']).first()
+        if player:
+            top_event_scorer = {
+                'id': player.id,
+                'username': player.username,
+                'goals': goal_events['goals'],
+            }
+
+    # Fallback top scorer from league statistics (less precise but works
+    # when match events have not been populated).
+    top_stats_scorer = None
+    stats_qs = PlayerLeagueStatistics.objects.filter(
+        league=tournament.league
+    ).select_related('user').order_by('-goals_scored').first()
+    if stats_qs:
+        top_stats_scorer = {
+            'id': stats_qs.user.id,
+            'username': stats_qs.user.username,
+            'goals': stats_qs.goals_scored,
+        }
+
+    recent_matches = list(
+        matches.select_related('home_user', 'away_user', 'home_team', 'away_team', 'round')
+        .order_by('-updated_at')[:6]
+    )
+
+    return {
+        'tournament': {
+            'id': tournament.id,
+            'name': tournament.name,
+            'status': tournament.status,
+            'format': tournament.format,
+            'is_team_based': tournament.is_team_based,
+        },
+        'participants': participant_counts,
+        'matches': {
+            'total': total_matches,
+            'verified': verified_matches,
+            'remaining': total_matches - verified_matches,
+            'status_breakdown': status_breakdown,
+        },
+        'performance': {
+            'total_goals': total_goals,
+            'avg_goals_per_match': avg_goals,
+            'progress_percent': round(verified_matches * 100.0 / total_matches, 1)
+                if total_matches else 0.0,
+        },
+        'leaders': {
+            'top_scorer': top_event_scorer or top_stats_scorer,
+        },
+        'recent_matches': [
+            {
+                'id': m.id,
+                'home_display': m.home_display,
+                'away_display': m.away_display,
+                'home_score': m.home_score,
+                'away_score': m.away_score,
+                'status': m.status,
+                'round_name': m.round.name if m.round_id else None,
+                'scheduled_at': m.scheduled_at.isoformat() if m.scheduled_at else None,
+            }
+            for m in recent_matches
+        ],
+    }

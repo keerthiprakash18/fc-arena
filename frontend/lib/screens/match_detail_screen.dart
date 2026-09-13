@@ -6,6 +6,7 @@ import '../models/match.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import 'evidence_viewer_screen.dart';
+import 'live_match_screen.dart';
 
 class MatchDetailScreen extends StatefulWidget {
   final int matchId;
@@ -226,6 +227,11 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
             if (match.status == 'EVIDENCE_SUBMITTED')
               _actionButton('Trigger AI Verification', Icons.smart_toy, Colors.purple, _triggerVerification),
             _actionButton('View Evidence', Icons.folder_open, Colors.indigo, _viewEvidence),
+            _actionButton('Live View', Icons.live_tv, FCColors.red, () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => LiveMatchScreen(leagueId: _leagueId, matchId: match.id),
+              ));
+            }),
           ],
           const SizedBox(height: 16),
           _infoRow('Match ID', '${match.id}'),

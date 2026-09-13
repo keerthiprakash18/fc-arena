@@ -143,3 +143,30 @@ class LeagueSearchView(APIView):
         return Response(services.search_league(
             league, request.query_params.get('q', ''), limit=limit
         ))
+
+
+class GlobalSearchView(APIView):
+    """Search across every league the caller is an active member of.
+
+    Results are grouped by league so the UI can show context ("Team X in League Y").
+    An empty query returns empty buckets rather than dumping every entity.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        raw_limit = request.query_params.get('limit', 8)
+        try:
+            limit = max(1, min(int(raw_limit), 25))
+        except (TypeError, ValueError):
+            limit = 8
+
+        user_league_ids = LeagueMember.objects.filter(
+            user=request.user, is_active=True
+        ).values_list('league_id', flat=True)
+
+        return Response(services.search_global(
+            user_league_ids,
+            request.query_params.get('q', ''),
+            limit=limit,
+        ))

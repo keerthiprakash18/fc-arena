@@ -36,8 +36,10 @@ class _SearchScreenState extends State<SearchScreen> {
   /// Incremented per request; a response is only applied if it is still current.
   int _requestSeq = 0;
 
+  static const int _allLeaguesId = -1;
+
   List<Map<String, dynamic>> _leagues = [];
-  int _leagueId = 0;
+  int _leagueId = _allLeaguesId;
   SearchResults? _results;
   bool _searching = false;
   String? _error;
@@ -62,7 +64,7 @@ class _SearchScreenState extends State<SearchScreen> {
       if (!mounted) return;
       setState(() {
         _leagues = leagues;
-        _leagueId = leagues.isNotEmpty ? leagues.first['id'] as int : 0;
+        _leagueId = _allLeaguesId;
       });
       if (_controller.text.trim().isNotEmpty) _run(_controller.text);
     } catch (e) {
@@ -86,12 +88,13 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _run(String query) async {
-    if (_leagueId == 0) return;
     final seq = ++_requestSeq;
     setState(() => _searching = true);
 
     try {
-      final results = await _api.searchLeague(_leagueId, query);
+      final results = _leagueId == _allLeaguesId
+          ? await _api.searchGlobal(query)
+          : await _api.searchLeague(_leagueId, query);
       // A newer keystroke has already been dispatched; drop this response.
       if (!mounted || seq != _requestSeq) return;
       setState(() {
@@ -183,12 +186,16 @@ class _SearchScreenState extends State<SearchScreen> {
             dropdownColor: FCColors.surface,
             icon: const Icon(Icons.expand_more, color: FCColors.white50),
             style: const TextStyle(color: Colors.white, fontSize: 14),
-            items: _leagues
-                .map((l) => DropdownMenuItem<int>(
-                      value: l['id'] as int,
-                      child: Text(l['name'] ?? 'League'),
-                    ))
-                .toList(),
+            items: [
+              const DropdownMenuItem<int>(
+                value: _allLeaguesId,
+                child: Text('All Leagues'),
+              ),
+              ..._leagues.map((l) => DropdownMenuItem<int>(
+                    value: l['id'] as int,
+                    child: Text(l['name'] ?? 'League'),
+                  )),
+            ],
             onChanged: (id) {
               if (id == null) return;
               setState(() => _leagueId = id);
