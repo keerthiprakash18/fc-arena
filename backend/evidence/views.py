@@ -19,25 +19,12 @@ def _safe_file_name(name):
 def _is_match_participant(match, user):
     """True when `user` is a participant of `match`.
 
-    A match is either user-based (home_user/away_user) or team-based
-    (home_team/away_team) — never both. The old code only checked the user
-    FKs, which are None on every team match, so *everyone* got a 403 there.
-    For team matches we accept any active member of either squad.
+    Thin alias for `Match.is_participant`, kept because it reads well at the
+    call sites here. The logic lives on the model so evidence and disputes
+    cannot drift apart — the original copy only checked the user FKs, which are
+    None on every team match, so everyone got a 403 there.
     """
-    if user is None or not user.is_authenticated:
-        return False
-    if user.is_superuser:
-        return True
-    if match.home_user_id or match.away_user_id:
-        return user.id in (match.home_user_id, match.away_user_id)
-    # Team match — membership of either squad counts.
-    from teams.models import TeamMember
-    team_ids = [tid for tid in (match.home_team_id, match.away_team_id) if tid]
-    if not team_ids:
-        return False
-    return TeamMember.objects.filter(
-        team_id__in=team_ids, user=user, is_active=True
-    ).exists()
+    return match.is_participant(user)
 
 
 def _is_league_admin(league_id, user):

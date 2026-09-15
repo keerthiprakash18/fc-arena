@@ -78,6 +78,32 @@ class Match(models.Model):
         allowed = self.VALID_TRANSITIONS.get(self.status, [])
         return new_status in allowed
 
+    def is_participant(self, user):
+        """True when ``user`` is one of the two sides of this match.
+
+        A match is user-based *or* team-based, never both, so anything that asks
+        "is this person involved?" must branch on which family it is. Checking
+        only ``home_user``/``away_user`` silently returns False for every team
+        match — which is how disputes became impossible to raise and evidence
+        uploads 403'd for everyone on team fixtures.
+
+        For a team match, any active member of either squad counts. Superusers
+        are treated as participants so an operator can always intervene.
+        """
+        if user is None or not getattr(user, 'is_authenticated', False):
+            return False
+        if user.is_superuser:
+            return True
+        if self.home_user_id or self.away_user_id:
+            return user.id in (self.home_user_id, self.away_user_id)
+        team_ids = [tid for tid in (self.home_team_id, self.away_team_id) if tid]
+        if not team_ids:
+            return False
+        from teams.models import TeamMember
+        return TeamMember.objects.filter(
+            team_id__in=team_ids, user=user, is_active=True
+        ).exists()
+
     def transition_to(self, new_status):
         if not self.can_transition_to(new_status):
             return False, f"Cannot transition from {self.status} to {new_status}"

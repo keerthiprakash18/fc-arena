@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../config/api.dart';
 import '../models/dashboard.dart';
 import '../services/api_service.dart';
+import 'dispute_detail_screen.dart';
 import 'review_detail_screen.dart';
 
 class AdminReviewScreen extends StatefulWidget {
@@ -146,20 +147,51 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
   }
 
   Widget _disputeCard(Map<String, dynamic> dispute) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: FCColors.surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.red.withValues(alpha: 0.3))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Icon(Icons.gavel, size: 16, color: Colors.red),
-          const SizedBox(width: 8),
-          Text('Match #${dispute['match_id']} — raised by ${dispute['raised_by']}',
-            style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
-        ]),
-        const SizedBox(height: 6),
-        Text('${dispute['reason']}', style: TextStyle(fontSize: 12, color: FCColors.white50)),
-      ]),
+    // Tappable: an admin who can see a dispute must be able to act on it. The
+    // card used to be inert, so open disputes could never be resolved from the
+    // app even though the API has always supported it.
+    final disputeId = dispute['dispute_id'];
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: disputeId is int
+            ? () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => DisputeDetailScreen(
+                      leagueId: _leagueId,
+                      disputeId: disputeId,
+                      isAdmin: _isAdmin,
+                    ),
+                  ),
+                );
+                if (mounted) _load();
+              }
+            : null,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: FCColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const Icon(Icons.gavel, size: 16, color: Colors.red),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Match #${dispute['match_id']} — raised by ${dispute['raised_by']}',
+                  style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
+              ),
+              Icon(Icons.chevron_right, size: 18, color: FCColors.white40),
+            ]),
+            const SizedBox(height: 6),
+            Text('${dispute['reason']}', style: TextStyle(fontSize: 12, color: FCColors.white50)),
+          ]),
+        ),
+      ),
     );
   }
 }

@@ -43,7 +43,10 @@ class DisputeCreateSerializer(serializers.ModelSerializer):
         match = attrs.get('match')
         if not match:
             raise serializers.ValidationError("Match is required.")
-        if match.home_user != user and match.away_user != user:
+        # `match.is_participant` handles both match families. Comparing only
+        # home_user/away_user (as this did) rejected *every* team match, because
+        # those FKs are None there — so a team fixture could never be disputed.
+        if not match.is_participant(user):
             raise serializers.ValidationError(
                 "Only participants of the match can raise a dispute."
             )
