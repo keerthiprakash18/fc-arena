@@ -116,15 +116,30 @@ class ApiClient {
     return h;
   }
 
-  Future<Map<String, dynamic>> _handleResponse(http.Response response) async {
-    final body = utf8.decode(response.bodyBytes);
-
+  /// Sends [request] and, on a 401 with a usable refresh token, refreshes once
+  /// and retries the original request with the new access token.
+  ///
+  /// The refresh used to happen inside the response decoder, which then decoded
+  /// the *same* already-consumed 401 response — so a refresh that succeeded
+  /// still surfaced to the caller as a failure (and looked like a spurious
+  /// logout). Retrying means re-issuing the request, so it has to happen here,
+  /// where the request is still available.
+  Future<Map<String, dynamic>> _send(
+    Future<http.Response> Function() request, {
+    bool paginated = false,
+  }) async {
+    var response = await request();
     if (response.statusCode == 401 && _refreshToken != null) {
-      final refreshed = await _tryRefreshToken();
-      if (refreshed) {
-        return _handleResponse(response);
+      if (await _tryRefreshToken()) {
+        response = await request();
       }
     }
+    return paginated ? _handleListResponse(response) : _handleResponse(response);
+  }
+
+  /// Decodes a completed response. Pure — it never re-issues a request.
+  Future<Map<String, dynamic>> _handleResponse(http.Response response) async {
+    final body = utf8.decode(response.bodyBytes);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (body.isEmpty) return {};
@@ -195,31 +210,29 @@ class ApiClient {
   }
 
   Future<List<int>> getBytes(String path) async {
-    final response = await http.get(
+    var response = await http.get(
       Uri.parse('$apiBaseUrl$path'),
       headers: _headers,
     );
+    if (response.statusCode == 401 && _refreshToken != null) {
+      if (await _tryRefreshToken()) {
+        response = await http.get(Uri.parse('$apiBaseUrl$path'), headers: _headers);
+      }
+    }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return response.bodyBytes;
     }
     throw ApiException(response.statusCode, utf8.decode(response.bodyBytes));
   }
 
-  Future<Map<String, dynamic>> get(String path) async {
-    final response = await http.get(
-      Uri.parse('$apiBaseUrl$path'),
-      headers: _headers,
-    );
-    return _handleResponse(response);
-  }
+  Future<Map<String, dynamic>> get(String path) => _send(
+        () => http.get(Uri.parse('$apiBaseUrl$path'), headers: _headers),
+      );
 
-  Future<Map<String, dynamic>> getList(String path) async {
-    final response = await http.get(
-      Uri.parse('$apiBaseUrl$path'),
-      headers: _headers,
-    );
-    return _handleListResponse(response);
-  }
+  Future<Map<String, dynamic>> getList(String path) => _send(
+        () => http.get(Uri.parse('$apiBaseUrl$path'), headers: _headers),
+        paginated: true,
+      );
 
   /// GET a paginated collection and follow `next` until every page is read.
   ///
@@ -235,7 +248,15 @@ class ApiClient {
 
     while (url != null && guard < 100) {
       guard++;
-      final response = await http.get(Uri.parse(url), headers: _headers);
+      var response = await http.get(Uri.parse(url), headers: _headers);
+
+      // A long walk can outlive the access token. Refresh and retry this page
+      // instead of truncating the collection at whatever we had collected.
+      if (response.statusCode == 401 && _refreshToken != null) {
+        if (await _tryRefreshToken()) {
+          response = await http.get(Uri.parse(url), headers: _headers);
+        }
+      }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         // Surfaces the real API error rather than a silently empty list.
@@ -260,30 +281,36 @@ class ApiClient {
     return {'results': collected};
   }
 
-  Future<Map<String, dynamic>> post(String path, [Map<String, dynamic>? data]) async {
-    final response = await http.post(
-      Uri.parse('$apiBaseUrl$path'),
-      headers: _headers,
-      body: data != null ? json.encode(data) : null,
-    );
-    return _handleResponse(response);
-  }
+  Future<Map<String, dynamic>> post(String path, [Map<String, dynamic>? data]) => _send(
+        () => http.post(
+          Uri.parse('$apiBaseUrl$path'),
+          headers: _headers,
+          body: data != null ? json.encode(data) : null,
+        ),
+      );
 
-  Future<Map<String, dynamic>> patch(String path, Map<String, dynamic> data) async {
-    final response = await http.patch(
-      Uri.parse('$apiBaseUrl$path'),
-      headers: _headers,
-      body: json.encode(data),
-    );
-    return _handleResponse(response);
-  }
+  Future<Map<String, dynamic>> patch(String path, Map<String, dynamic> data) => _send(
+        () => http.patch(
+          Uri.parse('$apiBaseUrl$path'),
+          headers: _headers,
+          body: json.encode(data),
+        ),
+      );
 
   Future<void> delete(String path) async {
-    final response = await http.delete(
+    var response = await http.delete(
       Uri.parse('$apiBaseUrl$path'),
       headers: _headers,
     );
+    if (response.statusCode == 401 && _refreshToken != null) {
+      if (await _tryRefreshToken()) {
+        response = await http.delete(Uri.parse('$apiBaseUrl$path'), headers: _headers);
+      }
+    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
+      // Decode the real error rather than reporting a bare "Delete failed",
+      // which hid why the server refused (e.g. a permission rule).
+      await _handleResponse(response);
       throw ApiException(response.statusCode, 'Delete failed');
     }
   }
