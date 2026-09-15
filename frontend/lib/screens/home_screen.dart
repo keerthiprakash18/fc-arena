@@ -309,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: FCColors.pitch,
       appBar: AppBar(
-        backgroundColor: FCColors.surface.withOpacity(0.95),
+        backgroundColor: FCColors.surface.withValues(alpha: 0.95),
         title: Row(children: [
           Container(
             width: 36,
@@ -318,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
               gradient: FCGradients.accent,
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
-                BoxShadow(color: FCColors.accent.withOpacity(0.25), blurRadius: 12, spreadRadius: 2),
+                BoxShadow(color: FCColors.accent.withValues(alpha: 0.25), blurRadius: 12, spreadRadius: 2),
               ],
             ),
             child: const Icon(Icons.sports_soccer, size: 20, color: Colors.white),
@@ -629,7 +629,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 gradient: FCGradients.accent,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
-                  BoxShadow(color: FCColors.accent.withOpacity(0.3), blurRadius: 40, spreadRadius: 6),
+                  BoxShadow(color: FCColors.accent.withValues(alpha: 0.3), blurRadius: 40, spreadRadius: 6),
                 ],
               ),
               child: const Icon(Icons.emoji_events, size: 48, color: Colors.white),
@@ -699,10 +699,10 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 48,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [FCColors.accent.withOpacity(0.2), FCColors.purple.withOpacity(0.15)],
+              colors: [FCColors.accent.withValues(alpha: 0.2), FCColors.purple.withValues(alpha: 0.15)],
             ),
             shape: BoxShape.circle,
-            border: Border.all(color: FCColors.accent.withOpacity(0.25), width: 1.5),
+            border: Border.all(color: FCColors.accent.withValues(alpha: 0.25), width: 1.5),
           ),
           child: Center(
             child: Text(
@@ -905,14 +905,14 @@ class _HomeScreenState extends State<HomeScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                a.color.withOpacity(0.08),
-                a.color.withOpacity(0.03),
+                a.color.withValues(alpha: 0.08),
+                a.color.withValues(alpha: 0.03),
               ],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: a.color.withOpacity(0.15), width: 1),
+            border: Border.all(color: a.color.withValues(alpha: 0.15), width: 1),
             boxShadow: [
-              BoxShadow(color: a.color.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4)),
+              BoxShadow(color: a.color.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4)),
             ],
           ),
           child: Column(
@@ -921,13 +921,13 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: a.color.withOpacity(0.12),
+                  color: a.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(a.icon, color: a.color, size: 22),
               ),
               const SizedBox(height: 8),
-              Text(a.label, style: TextStyle(color: a.color.withOpacity(0.9), fontSize: 11, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+              Text(a.label, style: TextStyle(color: a.color.withValues(alpha: 0.9), fontSize: 11, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
             ],
           ),
         ),

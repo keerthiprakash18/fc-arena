@@ -29,10 +29,13 @@ class ApiService {
     return await getMe();
   }
 
-  /// Create a new account. On success the caller routes the user to the login
-  /// screen so they sign in explicitly — we deliberately do NOT auto-login
-  /// here, which also avoids fetching the profile before any token exists.
-  Future<void> register({
+  /// Create a new account.
+  ///
+  /// The backend issues a one-time code and leaves the account inactive until
+  /// it is confirmed, so the caller routes to the OTP screen using the returned
+  /// payload (`otp_required`, and `dev_otp` while no mail transport is
+  /// configured).
+  Future<Map<String, dynamic>> register({
     required String username,
     required String email,
     required String password,
@@ -40,13 +43,56 @@ class ApiService {
     String? gameInGameName,
     String? phoneNumber,
   }) async {
-    await _client.post('/auth/register/', {
+    return await _client.post('/auth/register/', {
       'username': username,
       'email': email,
       'password': password,
       if (gameUid != null && gameUid.isNotEmpty) 'game_uid': gameUid,
       if (gameInGameName != null && gameInGameName.isNotEmpty) 'game_in_game_name': gameInGameName,
       if (phoneNumber != null && phoneNumber.isNotEmpty) 'phone_number': phoneNumber,
+    });
+  }
+
+  /// Confirm the code sent at registration and activate the account.
+  Future<Map<String, dynamic>> verifyOtp({
+    required String username,
+    required String code,
+  }) async {
+    return await _client.post('/auth/verify-otp/', {
+      'username': username,
+      'code': code,
+    });
+  }
+
+  /// Request a replacement code (registration verification or password reset).
+  Future<Map<String, dynamic>> resendOtp({
+    required String username,
+    String purpose = 'EMAIL_VERIFY',
+  }) async {
+    return await _client.post('/auth/resend-otp/', {
+      'username': username,
+      'purpose': purpose,
+    });
+  }
+
+  /// Start a password reset. Always succeeds, so it cannot be used to discover
+  /// which accounts exist.
+  Future<Map<String, dynamic>> forgotPassword(String identifier) async {
+    return await _client.post('/auth/forgot-password/', {
+      'identifier': identifier,
+    });
+  }
+
+  /// Finish a password reset with the code that was issued.
+  Future<Map<String, dynamic>> resetPassword({
+    required String identifier,
+    required String code,
+    required String newPassword,
+  }) async {
+    return await _client.post('/auth/reset-password/', {
+      'identifier': identifier,
+      'code': code,
+      'new_password': newPassword,
     });
   }
 

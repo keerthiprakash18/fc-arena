@@ -4,6 +4,8 @@ import '../config/api.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../main.dart';
+import 'forgot_password_screen.dart';
+import 'otp_verification_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -38,15 +40,35 @@ class _LoginScreenState extends State<LoginScreen> {
         (route) => false,
       );
     } else if (mounted) {
+      final needsVerification = auth.lastErrorNeedsVerification;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(auth.error ?? 'Login failed'),
           backgroundColor: FCColors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          action: needsVerification
+              ? SnackBarAction(
+                  label: 'VERIFY',
+                  textColor: Colors.white,
+                  onPressed: _goToVerification,
+                )
+              : null,
         ),
       );
     }
+  }
+
+  /// Send an unverified user straight to the code screen with their username
+  /// already filled in.
+  void _goToVerification() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OtpVerificationScreen(
+          username: _usernameController.text.trim(),
+        ),
+      ),
+    );
   }
 
   Future<void> _editServerUrl() async {
@@ -136,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
-                      colors: [FCColors.accent.withOpacity(0.06), Colors.transparent],
+                      colors: [FCColors.accent.withValues(alpha: 0.06), Colors.transparent],
                     ),
                   ),
                 ),
@@ -150,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
-                      colors: [FCColors.purple.withOpacity(0.05), Colors.transparent],
+                      colors: [FCColors.purple.withValues(alpha: 0.05), Colors.transparent],
                     ),
                   ),
                 ),
@@ -182,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: FCColors.accent.withOpacity(0.3),
+                                color: FCColors.accent.withValues(alpha: 0.3),
                                 blurRadius: 30,
                                 spreadRadius: 4,
                               ),
@@ -212,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           'Football Tournament Platform',
                           style: TextStyle(
                             fontSize: 14,
-                            color: FCColors.accent.withOpacity(0.7),
+                            color: FCColors.accent.withValues(alpha: 0.7),
                             letterSpacing: 1,
                             fontWeight: FontWeight.w500,
                           ),
@@ -226,10 +248,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen(),
+                              ),
+                            ),
                             child: Text(
                               'Forgot Password?',
-                              style: TextStyle(color: FCColors.white40, fontSize: 12),
+                              style: TextStyle(
+                                color: FCColors.accent.withValues(alpha: 0.85),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ),

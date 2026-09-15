@@ -185,6 +185,32 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
+# ── One-time codes (registration + password reset) ──────────────────────────
+# Accounts created through /auth/register/ start inactive and are activated by
+# the code sent to them. Flip this off only for a deployment that genuinely has
+# no way to deliver a code.
+REQUIRE_OTP_VERIFICATION = config('REQUIRE_OTP_VERIFICATION', default=True, cast=bool)
+OTP_TTL_MINUTES = config('OTP_TTL_MINUTES', default=10, cast=int)
+OTP_MAX_ATTEMPTS = config('OTP_MAX_ATTEMPTS', default=5, cast=int)
+# When true, endpoints echo the generated code back as `dev_otp`. Defaults to
+# DEBUG so local development works without a mail server; force it off in
+# production (the default already is off once DEBUG=False).
+OTP_EXPOSE_IN_RESPONSE = config('OTP_EXPOSE_IN_RESPONSE', default=DEBUG, cast=bool)
+
+# Transactional email. No SMTP account is configured for this deployment, so the
+# console backend is the default and codes are written to the server log. Set
+# EMAIL_HOST (plus the usual EMAIL_* variables) to switch to real delivery —
+# at which point codes stop being returned in API responses.
+EMAIL_BACKEND = config(
+    'EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend'
+)
+EMAIL_HOST = config('EMAIL_HOST', default='')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='FC Harina <no-reply@fcharina.app>')
+
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)

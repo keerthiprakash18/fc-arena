@@ -148,7 +148,7 @@ class ApiClient {
         message = errorBody.toString();
       }
     }
-    throw ApiException(response.statusCode, message);
+    throw ApiException(response.statusCode, message, errorBody);
   }
 
   Future<Map<String, dynamic>> _handleListResponse(http.Response response) async {
@@ -315,7 +315,24 @@ class ApiClient {
 class ApiException implements Exception {
   final int statusCode;
   final String message;
-  ApiException(this.statusCode, this.message);
+
+  /// The decoded error payload, when the server sent JSON. Lets callers pull a
+  /// specific field error (e.g. `new_password`) instead of the whole envelope.
+  final dynamic body;
+
+  ApiException(this.statusCode, this.message, [this.body]);
+
+  /// The first human-readable error string in the payload, if any.
+  String? get firstFieldError {
+    final payload = body;
+    if (payload is Map) {
+      for (final value in payload.values) {
+        if (value is List && value.isNotEmpty) return value.first.toString();
+        if (value is String && value.isNotEmpty) return value;
+      }
+    }
+    return null;
+  }
 
   @override
   String toString() => 'ApiException($statusCode): $message';

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import 'login_screen.dart';
+import 'otp_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -37,28 +38,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
-    final success = await auth.register(
-      _usernameController.text.trim(),
-      _emailController.text.trim(),
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final payload = await auth.register(
+      username,
+      email,
       _passwordController.text,
       gameUid: _gameUidController.text.trim(),
       gameInGameName: _gameNameController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
     );
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Account created! Please sign in.'),
-          backgroundColor: FCColors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-      );
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
-    } else if (mounted) {
+    if (!mounted) return;
+
+    if (payload == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(auth.error ?? 'Registration failed'),
@@ -67,7 +59,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       );
+      return;
     }
+
+    // Registration is a two-step handshake: the account only becomes usable
+    // once the one-time code is confirmed, so hand off to the OTP screen
+    // instead of dropping the user back on login where they would be refused.
+    if (payload['otp_required'] == true) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => OtpVerificationScreen(
+            username: username,
+            email: email,
+            initialDevCode: payload['dev_otp'] as String?,
+          ),
+        ),
+        (route) => false,
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Account created! Please sign in.'),
+        backgroundColor: FCColors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override

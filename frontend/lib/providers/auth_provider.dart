@@ -39,12 +39,18 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      // A 401 from the login endpoint means the credentials were wrong — say
-      // so plainly instead of dumping DRF's raw detail string.
+      // A 401 from the login endpoint usually means the credentials were wrong,
+      // so say that plainly instead of dumping DRF's raw detail string. The one
+      // exception is an account that registered but never confirmed its code —
+      // the backend flags that case explicitly so we can point the user at the
+      // right fix (see ACCOUNT_NOT_VERIFIED_MESSAGE server-side).
       if (e is ApiException && e.statusCode == 401) {
-        _error = 'Invalid username or password.';
+        final detail = e.firstFieldError ?? e.message;
+        _error = detail.toLowerCase().contains('not been verified')
+            ? detail
+            : 'Invalid username or password.';
       } else {
-        _error = e.toString();
+        _error = _messageFor(e);
       }
       _loading = false;
       notifyListeners();
@@ -52,7 +58,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String username, String email, String password, {
+  /// True when the last failure was an unverified account rather than bad
+  /// credentials, so the login screen can offer a "verify now" shortcut.
+  bool get lastErrorNeedsVerification =>
+      (_error ?? '').toLowerCase().contains('not been verified');
+
+  /// Register, returning the backend payload.
+  ///
+  /// Registration is a two-step handshake: the backend creates the account and
+  /// issues a one-time code. The caller must send the user to the OTP screen
+  /// with the returned `username` before they can sign in.
+  Future<Map<String, dynamic>?> register(String username, String email, String password, {
     String? gameUid,
     String? gameInGameName,
     String? phoneNumber,
@@ -61,7 +77,7 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      await api.register(
+      final payload = await api.register(
         username: username,
         email: email,
         password: password,
@@ -71,13 +87,92 @@ class AuthProvider extends ChangeNotifier {
       );
       _loading = false;
       notifyListeners();
-      return true;
+      return payload;
     } catch (e) {
       _error = e.toString();
       _loading = false;
       notifyListeners();
+      return null;
+    }
+  }
+
+  /// Confirm the registration code. Returns true once the account is active.
+  Future<bool> verifyOtp(String username, String code) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await api.verifyOtp(username: username, code: code);
+      _loading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = _messageFor(e);
+      _loading = false;
+      notifyListeners();
       return false;
     }
+  }
+
+  /// Ask for a fresh code. Returns the payload so the caller can surface
+  /// `dev_otp` when the server has no mail transport configured.
+  Future<Map<String, dynamic>?> resendOtp(String username, {String purpose = 'EMAIL_VERIFY'}) async {
+    try {
+      return await api.resendOtp(username: username, purpose: purpose);
+    } catch (e) {
+      _error = _messageFor(e);
+      notifyListeners();
+      return null;
+    }
+  }
+
+  /// Start a password reset. Returns the payload (which carries `dev_otp` in
+  /// development).
+  Future<Map<String, dynamic>?> forgotPassword(String identifier) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final payload = await api.forgotPassword(identifier);
+      _loading = false;
+      notifyListeners();
+      return payload;
+    } catch (e) {
+      _error = _messageFor(e);
+      _loading = false;
+      notifyListeners();
+      return null;
+    }
+  }
+
+  /// Complete a password reset with the issued code.
+  Future<bool> resetPassword(String identifier, String code, String newPassword) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await api.resetPassword(
+        identifier: identifier,
+        code: code,
+        newPassword: newPassword,
+      );
+      _loading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = _messageFor(e);
+      _loading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Pull the human-readable line out of a DRF error envelope.
+  String _messageFor(Object e) {
+    if (e is ApiException) {
+      return e.firstFieldError ?? e.message;
+    }
+    return e.toString();
   }
 
   Future<void> logout() async {
