@@ -229,6 +229,12 @@ class ApiClient {
         () => http.get(Uri.parse('$apiBaseUrl$path'), headers: _headers),
       );
 
+  /// GET one page of a paginated collection.
+  ///
+  /// Returns only page one — the API caps every page at 20 rows and does not
+  /// accept a page-size parameter. Prefer [getListAll] unless a partial page is
+  /// genuinely what you want, because silently showing the first 20 of 60
+  /// fixtures is a wrong answer rather than a shorter one.
   Future<Map<String, dynamic>> getList(String path) => _send(
         () => http.get(Uri.parse('$apiBaseUrl$path'), headers: _headers),
         paginated: true,

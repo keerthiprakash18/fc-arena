@@ -4,6 +4,7 @@ import '../models/match.dart';
 import '../models/season.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/num_utils.dart';
 
 class PlayerStatsScreen extends StatefulWidget {
   final int userId;
@@ -19,6 +20,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
   num? _rating;
   List<Match> _matches = [];
   bool _loading = true;
+  String? _error;
   int _leagueId = 1;
   List<Season> _seasons = [];
   int? _seasonId;
@@ -30,6 +32,10 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
   }
 
   Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final leagues = await _api.getMyLeagues();
       if (leagues.isNotEmpty) _leagueId = leagues.first['id'];
@@ -43,15 +49,31 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
         ratings = [];
       }
       final my = stats.where((s) => s['user'] == widget.userId).toList();
+      // `rating` is a Django DecimalField, so DRF serialises it as a *string*
+      // ("1000.00"). The previous code cast it with `as num` — which throws —
+      // and then folded with an accumulator it never returned, so `_rating` was
+      // always 0 and the card never rendered. Read it through safeDouble and
+      // keep null to mean "this player has no rating yet", which is different
+      // from a real rating of zero.
+      final myRatings = ratings.where((r) => r['user'] == widget.userId).toList();
+      final rawRating = myRatings.isEmpty ? null : myRatings.first['rating'];
       setState(() {
         _stats = my.isNotEmpty ? my.first : null;
-        _rating = ratings.where((r) => r['user'] == widget.userId).map((r) => (r['rating'] ?? 0) as num).fold<num>(0, (a, b) => a);
+        // Null means "no rating record" — kept distinct from a real 0 so the
+        // card is hidden rather than showing a made-up figure.
+        _rating = rawRating == null ? null : safeDouble(rawRating);
         _matches = matches;
         _seasons = seasons;
         _loading = false;
       });
     } catch (e) {
-      setState(() { _loading = false; });
+      if (!mounted) return;
+      // Never swallow the reason: this catch is exactly what hid a broken
+      // rating parse, leaving the screen blank with no explanation.
+      setState(() {
+        _loading = false;
+        _error = e is ApiException ? e.message : e.toString();
+      });
     }
   }
 
@@ -80,7 +102,9 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: FCColors.accent))
-          : ListView(padding: const EdgeInsets.all(16), children: [
+          : _error != null
+              ? FCErrorRetry(message: _error!, onRetry: _load)
+              : ListView(padding: const EdgeInsets.all(16), children: [
               if (_seasons.isNotEmpty) ...[
                 _seasonPicker(),
                 const SizedBox(height: 16),
@@ -152,7 +176,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
               : 'No stats yet',
               style: TextStyle(fontSize: 13, color: FCColors.white70)),
         ])),
-        if (_rating != null && _rating! > 0)
+        if (_rating != null)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),

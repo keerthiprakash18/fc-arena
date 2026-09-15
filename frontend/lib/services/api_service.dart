@@ -14,6 +14,14 @@ import '../models/team.dart';
 import '../models/group.dart';
 import '../models/search.dart';
 
+/// Typed wrapper over the FC Harina API.
+///
+/// **List methods use `getListAll`, never `getList`.** The API paginates at 20
+/// rows per page and does not expose a page-size parameter, so page one is not
+/// the whole collection. Every method here returns a complete list — a
+/// truncated fixtures list or half a knockout bracket is a wrong answer, not a
+/// shorter one. Reach for `getList` only where a partial page is genuinely
+/// acceptable.
 class ApiService {
   final ApiClient _client;
 
@@ -107,7 +115,7 @@ class ApiService {
 
   // ─── Leagues ──────────────────────────────────────────
   Future<List<Map<String, dynamic>>> getMyLeagues() async {
-    final data = await _client.getList('/leagues/');
+    final data = await _client.getListAll('/leagues/');
     final results = data['results'] ?? data;
     if (results is List) return results.cast<Map<String, dynamic>>();
     return [];
@@ -160,7 +168,7 @@ class ApiService {
     if (game != null && game.isNotEmpty) params.add('game=${Uri.encodeQueryComponent(game)}');
     if (search != null && search.isNotEmpty) params.add('search=${Uri.encodeQueryComponent(search)}');
     final qs = params.isEmpty ? '' : '?${params.join('&')}';
-    final data = await _client.getList('/leagues/$leagueId/teams/$qs');
+    final data = await _client.getListAll('/leagues/$leagueId/teams/$qs');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((t) => Team.fromJson((t as Map).cast<String, dynamic>())).toList();
@@ -203,7 +211,7 @@ class ApiService {
   }
 
   Future<List<TeamMember>> getTeamMembers(int leagueId, int teamId) async {
-    final data = await _client.getList('/leagues/$leagueId/teams/$teamId/members/');
+    final data = await _client.getListAll('/leagues/$leagueId/teams/$teamId/members/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((m) => TeamMember.fromJson((m as Map).cast<String, dynamic>())).toList();
@@ -261,7 +269,7 @@ class ApiService {
   }
 
   Future<List<TeamStanding>> getTeamStandings(int leagueId) async {
-    final data = await _client.getList('/leagues/$leagueId/teams/standings/');
+    final data = await _client.getListAll('/leagues/$leagueId/teams/standings/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((r) => TeamStanding.fromJson((r as Map).cast<String, dynamic>())).toList();
@@ -287,7 +295,7 @@ class ApiService {
 
   // ─── Matches ──────────────────────────────────────────
   Future<List<Match>> getLeagueMatches(int leagueId) async {
-    final data = await _client.getList('/leagues/$leagueId/matches/');
+    final data = await _client.getListAll('/leagues/$leagueId/matches/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((m) => Match.fromJson(m)).toList();
@@ -349,7 +357,7 @@ class ApiService {
   }
 
   Future<List<Map<String, dynamic>>> getMatchEvidences(int leagueId, int matchId) async {
-    final data = await _client.getList('/leagues/$leagueId/matches/$matchId/evidence/');
+    final data = await _client.getListAll('/leagues/$leagueId/matches/$matchId/evidence/');
     final results = data['results'] ?? data;
     if (results is List) return results.cast<Map<String, dynamic>>();
     return [];
@@ -394,7 +402,7 @@ class ApiService {
   Future<List<LeaderboardEntry>> getLeaderboard(int leagueId, {String category = 'RATING', int? seasonId}) async {
     var path = '/leagues/$leagueId/leaderboards/?category=$category';
     if (seasonId != null) path += '&season_id=$seasonId';
-    final data = await _client.getList(path);
+    final data = await _client.getListAll(path);
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((e) => LeaderboardEntry.fromJson(e)).toList();
@@ -404,7 +412,7 @@ class ApiService {
 
   // ─── Notifications ───────────────────────────────────
   Future<List<NotificationItem>> getNotifications() async {
-    final data = await _client.getList('/notifications/');
+    final data = await _client.getListAll('/notifications/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((n) => NotificationItem.fromJson(n)).toList();
@@ -431,7 +439,7 @@ class ApiService {
 
   // ─── Disputes ────────────────────────────────────────
   Future<List<Dispute>> getDisputes(int leagueId) async {
-    final data = await _client.getList('/leagues/$leagueId/disputes/');
+    final data = await _client.getListAll('/leagues/$leagueId/disputes/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((d) => Dispute.fromJson(d)).toList();
@@ -473,7 +481,7 @@ class ApiService {
 
   // ─── Seasons ─────────────────────────────────────────
   Future<List<Season>> getSeasons(int leagueId) async {
-    final data = await _client.getList('/leagues/$leagueId/seasons/');
+    final data = await _client.getListAll('/leagues/$leagueId/seasons/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((s) => Season.fromJson(s)).toList();
@@ -497,7 +505,7 @@ class ApiService {
   }
 
   Future<List<SeasonMember>> getSeasonMembers(int leagueId, int seasonId) async {
-    final data = await _client.getList('/leagues/$leagueId/seasons/$seasonId/members/');
+    final data = await _client.getListAll('/leagues/$leagueId/seasons/$seasonId/members/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((m) => SeasonMember.fromJson(m)).toList();
@@ -507,7 +515,7 @@ class ApiService {
 
   // ─── Tournaments ─────────────────────────────────────
   Future<List<Tournament>> getTournaments(int leagueId) async {
-    final data = await _client.getList('/leagues/$leagueId/tournaments/');
+    final data = await _client.getListAll('/leagues/$leagueId/tournaments/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((t) => Tournament.fromJson(t)).toList();
@@ -562,7 +570,7 @@ class ApiService {
   }
 
   Future<List<TournamentParticipant>> getTournamentParticipants(int leagueId, int tournamentId) async {
-    final data = await _client.getList('/leagues/$leagueId/tournaments/$tournamentId/participants/');
+    final data = await _client.getListAll('/leagues/$leagueId/tournaments/$tournamentId/participants/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((p) => TournamentParticipant.fromJson(p)).toList();
@@ -571,7 +579,7 @@ class ApiService {
   }
 
   Future<List<TournamentRound>> getTournamentRounds(int leagueId, int tournamentId) async {
-    final data = await _client.getList('/leagues/$leagueId/tournaments/$tournamentId/rounds/');
+    final data = await _client.getListAll('/leagues/$leagueId/tournaments/$tournamentId/rounds/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((r) => TournamentRound.fromJson(r)).toList();
@@ -619,7 +627,7 @@ class ApiService {
     if (seasonId != null) params.add('season_id=$seasonId');
     if (tournamentId != null) params.add('tournament_id=$tournamentId');
     if (params.isNotEmpty) url += '?${params.join('&')}';
-    final data = await _client.getList(url);
+    final data = await _client.getListAll(url);
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((a) => Award.fromJson(a)).toList();
@@ -702,7 +710,7 @@ class ApiService {
 
   // ─── Ratings ─────────────────────────────────────────
   Future<List<Map<String, dynamic>>> getRatings(int leagueId) async {
-    final data = await _client.getList('/leagues/$leagueId/ratings/');
+    final data = await _client.getListAll('/leagues/$leagueId/ratings/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.cast<Map<String, dynamic>>();
@@ -722,7 +730,7 @@ class ApiService {
   // ─── Player Statistics ───────────────────────────────
   Future<List<Map<String, dynamic>>> getPlayerStatistics(int leagueId, {int? seasonId}) async {
     final qs = seasonId != null ? '?season_id=$seasonId' : '';
-    final data = await _client.getList('/leagues/$leagueId/statistics/$qs');
+    final data = await _client.getListAll('/leagues/$leagueId/statistics/$qs');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.cast<Map<String, dynamic>>();
@@ -742,7 +750,7 @@ class ApiService {
 
   // ─── Match Events ────────────────────────────────────
   Future<List<Map<String, dynamic>>> getMatchEvents(int leagueId, int matchId) async {
-    final data = await _client.getList('/leagues/$leagueId/matches/$matchId/events/');
+    final data = await _client.getListAll('/leagues/$leagueId/matches/$matchId/events/');
     final results = data['results'] ?? data;
     if (results is List) return results.cast<Map<String, dynamic>>();
     return [];
@@ -767,7 +775,7 @@ class ApiService {
 
   // ─── Categories ─────────────────────────────────────
   Future<List<Category>> getCategories(int leagueId) async {
-    final data = await _client.getList('/leagues/$leagueId/categories/');
+    final data = await _client.getListAll('/leagues/$leagueId/categories/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((c) => Category.fromJson(c)).toList();
@@ -793,7 +801,7 @@ class ApiService {
   }
 
   Future<List<PlayerCategoryEntry>> getCategoryPlayers(int leagueId, int categoryId) async {
-    final data = await _client.getList('/leagues/$leagueId/categories/$categoryId/players/');
+    final data = await _client.getListAll('/leagues/$leagueId/categories/$categoryId/players/');
     final results = data['results'] ?? data;
     if (results is List) {
       return results.map((p) => PlayerCategoryEntry.fromJson(p)).toList();
@@ -846,7 +854,7 @@ class ApiService {
 
   // ─── Members ─────────────────────────────────────────
   Future<List<Map<String, dynamic>>> getLeagueMembers(int leagueId) async {
-    final data = await _client.getList('/leagues/$leagueId/members/');
+    final data = await _client.getListAll('/leagues/$leagueId/members/');
     final results = data['results'] ?? data;
     if (results is List) return results.cast<Map<String, dynamic>>();
     return [];
@@ -860,7 +868,7 @@ class ApiService {
   }
 
   Future<List<Map<String, dynamic>>> getMyLeaguesAdmin() async {
-    final data = await _client.getList('/leagues/');
+    final data = await _client.getListAll('/leagues/');
     final results = data['results'] ?? data;
     if (results is List) return results.cast<Map<String, dynamic>>();
     return [];
