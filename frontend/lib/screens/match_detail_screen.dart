@@ -5,6 +5,7 @@ import '../config/api.dart';
 import '../models/match.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/mime.dart';
 import '../utils/num_utils.dart';
 import 'evidence_viewer_screen.dart';
 import 'live_match_screen.dart';
@@ -121,7 +122,10 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
         filePath: picked.path,
         fileName: picked.name,
         fileSize: bytes.length,
-        fileType: 'image/png',
+        // Never hardcode this: image_picker re-encodes to JPEG when
+        // imageQuality/maxWidth are set, so 'image/png' mislabelled every
+        // gallery upload.
+        fileType: mimeTypeForFile(picked.name, reported: picked.mimeType),
       );
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Evidence uploaded!'), backgroundColor: Colors.green));
       await _loadMatch();
