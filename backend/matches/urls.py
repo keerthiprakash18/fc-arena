@@ -2,8 +2,7 @@ from django.urls import path
 from .views import (
     MatchListCreateView, MatchDetailView,
     MatchStatusUpdateView, MatchSubmitResultView,
-    MatchEvidenceListCreateView, MatchStatisticsView,
-    MatchVerificationView, MatchTransitionsView
+    MatchStatisticsView, MatchVerificationView, MatchTransitionsView
 )
 from .event_views import MatchEventListCreateView, MatchEventDeleteView
 
@@ -16,8 +15,10 @@ urlpatterns = [
          MatchStatusUpdateView.as_view(), name='match-status'),
     path('leagues/<int:league_id>/matches/<int:match_id>/submit/',
          MatchSubmitResultView.as_view(), name='match-submit'),
-    path('leagues/<int:league_id>/matches/<int:match_id>/evidence/',
-         MatchEvidenceListCreateView.as_view(), name='match-evidence'),
+    # NOTE: the evidence list/upload routes live in the `evidence` app
+    # (`/evidence/`, `/evidence/upload/`, `/evidence/<id>/file/`). A duplicate
+    # `.../evidence/` route used to live here but was shadowed by that app's
+    # include order, so it was unreachable dead code — removed.
     path('leagues/<int:league_id>/matches/<int:match_id>/statistics/',
          MatchStatisticsView.as_view(), name='match-statistics'),
     path('leagues/<int:league_id>/matches/<int:match_id>/verification/',

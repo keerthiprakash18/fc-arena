@@ -10,6 +10,36 @@ from .serializers import (
 )
 
 
+def _dispute_notify_targets(match, raised_by):
+    """Users who should be told a dispute was raised on `match`.
+
+    Handles both match families and never returns None, so the notification FK
+    stays valid. For a team match we notify the opposing squad's manager and
+    captain — the team equivalent of "the other player".
+    """
+    candidates = []
+    if match.home_user_id or match.away_user_id:
+        for uid, u in (('home_user', match.home_user), ('away_user', match.away_user)):
+            if u is not None:
+                candidates.append(u)
+    else:
+        for team in (match.home_team, match.away_team):
+            if team is None:
+                continue
+            for person in (team.manager, team.captain):
+                if person is not None:
+                    candidates.append(person)
+
+    seen = set()
+    result = []
+    for u in candidates:
+        if u.id == raised_by.id or u.id in seen:
+            continue
+        seen.add(u.id)
+        result.append(u)
+    return result
+
+
 class DisputeListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -49,18 +79,19 @@ class DisputeListCreateView(generics.ListCreateAPIView):
         )
 
         from notifications.services import create_notification
-        if dispute.match.home_user != self.request.user:
-            notify_user = dispute.match.home_user
-        else:
-            notify_user = dispute.match.away_user
-        create_notification(
-            user=notify_user,
-            notification_type='DISPUTE_UPDATE',
-            title='New Dispute Raised',
-            message=f'A dispute was raised on your match with reasoning: {dispute.get_reason_display()}.',
-            league=league,
-            match=dispute.match,
-        )
+        # Notify the *other* side. A user match has one opponent; a team match
+        # has no user FKs at all, so we fall back to the opposing team's
+        # manager and captain. Never notify `None` — Notification.user is a
+        # non-null FK and would raise an IntegrityError on team matches.
+        for target in _dispute_notify_targets(dispute.match, self.request.user):
+            create_notification(
+                user=target,
+                notification_type='DISPUTE_UPDATE',
+                title='New Dispute Raised',
+                message=f'A dispute was raised on your match with reasoning: {dispute.get_reason_display()}.',
+                league=league,
+                match=dispute.match,
+            )
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

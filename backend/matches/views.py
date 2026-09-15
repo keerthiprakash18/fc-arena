@@ -105,6 +105,17 @@ class MatchStatusUpdateView(generics.GenericAPIView):
                 match.played_at = timezone.now()
                 match.save(update_fields=['played_at'])
 
+            if new_status == 'VERIFIED':
+                # A manual admin verification must produce the same derived data
+                # as the evidence/verification flow (statistics, standings,
+                # leaderboards, records, bracket advancement) — otherwise a
+                # hand-verified result silently never updates the table.
+                match.verified_at = timezone.now()
+                match.verified_by = request.user
+                match.save(update_fields=['verified_at', 'verified_by'])
+                from verification.services import run_verified_match_pipeline
+                run_verified_match_pipeline(match)
+
         return Response(MatchSerializer(match).data)
 
 

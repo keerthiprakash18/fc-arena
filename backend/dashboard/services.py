@@ -17,6 +17,15 @@ from notifications.models import Notification
 from awards.models import Award
 
 
+# A tournament is "active" once it has left DRAFT and before it reaches a
+# terminal state. Keep this in one place — the old code used the non-existent
+# literal 'REGISTRATION', which silently matched nothing.
+ACTIVE_TOURNAMENT_STATUSES = [
+    'REGISTRATION_OPEN', 'REGISTRATION_CLOSED', 'SEEDING',
+    'FIXTURES_GENERATING', 'READY', 'IN_PROGRESS', 'SUSPENDED',
+]
+
+
 def _match_qs(league, **filters):
     return Match.objects.filter(league=league, **filters)
 
@@ -55,7 +64,7 @@ def league_overview(league):
             'members': LeagueMember.objects.filter(league=league, is_active=True).count(),
             'tournaments': Tournament.objects.filter(league=league).count(),
             'active_tournaments': Tournament.objects.filter(
-                league=league, status__in=['REGISTRATION', 'IN_PROGRESS']
+                league=league, status__in=ACTIVE_TOURNAMENT_STATUSES
             ).count(),
             'tournament_participants': TournamentParticipant.objects.filter(
                 tournament__league=league
@@ -149,18 +158,26 @@ def rating_trends(league, user=None):
 def pending_reviews(league):
     tasks = VerificationTask.objects.filter(
         match__league=league, status='ADMIN_REVIEW'
-    ).select_related('match', 'match__home_user', 'match__away_user').order_by('-created_at')
+    ).select_related(
+        'match', 'match__home_user', 'match__away_user',
+        'match__home_team', 'match__away_team',
+    ).order_by('-created_at')
 
     open_disputes = Dispute.objects.filter(
         league=league
-    ).exclude(status='RESOLVED').select_related('match', 'match__home_user', 'match__away_user', 'raised_by')
+    ).exclude(status='RESOLVED').select_related(
+        'match', 'match__home_user', 'match__away_user',
+        'match__home_team', 'match__away_team', 'raised_by',
+    )
 
     return {
         'verification_reviews': [{
             'task_id': t.id,
             'match_id': t.match_id,
-            'home_user': t.match.home_user.username,
-            'away_user': t.match.away_user.username,
+            # home_display/away_display resolve a user OR a team name, so this
+            # no longer crashes on team matches (where home_user is None).
+            'home_user': t.match.home_display,
+            'away_user': t.match.away_display,
             'confidence': float(t.ai_confidence_score) if t.ai_confidence_score is not None else None,
             'status': t.status,
             'created_at': t.created_at.isoformat(),
@@ -189,7 +206,7 @@ def recent_activity(league, limit=15):
     } for l in logs]
 
     matches = list(Match.objects.filter(league=league)
-                   .select_related('home_user', 'away_user')
+                   .select_related('home_user', 'away_user', 'home_team', 'away_team')
                    .order_by('-updated_at')[:limit])
     for m in matches:
         events.append({
@@ -200,8 +217,9 @@ def recent_activity(league, limit=15):
             'actor': None,
             'timestamp': m.updated_at.isoformat(),
             'metadata': {
-                'home': m.home_user.username,
-                'away': m.away_user.username,
+                # home_display/away_display handle both user and team matches.
+                'home': m.home_display,
+                'away': m.away_display,
                 'status': m.status,
                 'score': f"{m.home_score}-{m.away_score}" if m.home_score is not None else None,
             },
@@ -223,7 +241,7 @@ def platform_overview():
         'matches_last_30d': Match.objects.filter(created_at__gte=last_30d).count(),
         'pending_verification_reviews': VerificationTask.objects.filter(status='ADMIN_REVIEW').count(),
         'open_disputes': Dispute.objects.exclude(status='RESOLVED').count(),
-        'active_tournaments': Tournament.objects.filter(status__in=['REGISTRATION', 'IN_PROGRESS']).count(),
+        'active_tournaments': Tournament.objects.filter(status__in=ACTIVE_TOURNAMENT_STATUSES).count(),
         'audit_events': AuditLog.objects.count(),
         'notifications_sent': Notification.objects.count(),
     }
@@ -343,7 +361,10 @@ def search_global(user_league_ids, query, limit=8):
 
     league_ids = list(user_league_ids)
     if not league_ids:
-        return empty
+        # A user in no league has nothing to search — return the *global* empty
+        # shape (it has a `leagues` bucket, unlike the league-scoped one).
+        # Previously this returned an undefined `empty` name → NameError → 500.
+        return {'query': '', 'leagues': [], 'teams': [], 'tournaments': [], 'players': [], 'matches': []}
 
     leagues = League.objects.filter(id__in=league_ids)
 

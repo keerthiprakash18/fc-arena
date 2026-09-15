@@ -10,6 +10,36 @@ from .ocr_providers import get_ocr_provider
 AUTO_VERIFY_THRESHOLD = Decimal('0.8500')
 
 
+def run_verified_match_pipeline(match):
+    """Apply every derived-data side effect of a match becoming VERIFIED.
+
+    This is the single source of truth for "a result was made official":
+    player/team statistics, ratings, standings, leaderboards, records and
+    knockout bracket advancement. It is idempotent because
+    ``process_verified_match`` guards on ``match.is_idempotent_processed``.
+
+    Returns the name of the next knockout round if one was created, else None.
+
+    Both the evidence/verification flow and a manual admin status change go
+    through here — previously the status endpoint skipped all of it, so a
+    hand-verified match never updated the table.
+    """
+    from statistics.services import process_verified_match
+    process_verified_match(match)
+
+    from leaderboards.services import calculate_leaderboards
+    season = match.tournament.season if (match.tournament_id and match.tournament.season_id) else None
+    calculate_leaderboards(match.league, season, match.tournament)
+
+    # Records are recomputed from the same verified data, so a new best can
+    # never be set by an unverified result.
+    from records.services import recompute_league_records
+    recompute_league_records(match.league)
+
+    from tournaments.services import advance_tournament_after_verification
+    return advance_tournament_after_verification(match)
+
+
 def _result_recipients(match):
     """Users who should be told about a match result.
 
@@ -178,19 +208,9 @@ def _sync_match_verification(task):
         match.verified_at = timezone.now()
         match.verified_by = task.verified_by
         match.save(update_fields=['verified_at', 'verified_by'])
-        from statistics.services import process_verified_match
-        process_verified_match(match)
-        from leaderboards.services import calculate_leaderboards
-        season = match.tournament.season if match.tournament and hasattr(match.tournament, 'season') else None
-        calculate_leaderboards(match.league, season, match.tournament)
 
-        # Records are recomputed from the same verified data, so a new best can
-        # never be set by an unverified result.
-        from records.services import recompute_league_records
-        recompute_league_records(match.league)
-
-        from tournaments.services import advance_tournament_after_verification
-        next_round_name = advance_tournament_after_verification(match)
+        # Shared with the manual admin status path — see run_verified_match_pipeline.
+        next_round_name = run_verified_match_pipeline(match)
         if next_round_name:
             from notifications.services import create_bulk_notifications
             next_matches = list(match.tournament.matches.filter(round__round_number=match.round.round_number + 1))
@@ -198,7 +218,10 @@ def _sync_match_verification(task):
             if next_participants:
                 create_bulk_notifications(
                     users=next_participants,
-                    notification_type='TOURNAMENT_UPDATE',
+                    # 'ROUND_COMPLETED' is a real choice and maps to the
+                    # league_updates preference; 'TOURNAMENT_UPDATE' was neither,
+                    # so it bypassed preference filtering.
+                    notification_type='ROUND_COMPLETED',
                     title=f'Next Round: {next_round_name}',
                     message=f'Your next match in {match.tournament.name} is set. Check the bracket!',
                     league=match.league,

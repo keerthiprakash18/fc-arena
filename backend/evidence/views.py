@@ -16,6 +16,44 @@ def _safe_file_name(name):
     return name[:120]
 
 
+def _is_match_participant(match, user):
+    """True when `user` is a participant of `match`.
+
+    A match is either user-based (home_user/away_user) or team-based
+    (home_team/away_team) — never both. The old code only checked the user
+    FKs, which are None on every team match, so *everyone* got a 403 there.
+    For team matches we accept any active member of either squad.
+    """
+    if user is None or not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    if match.home_user_id or match.away_user_id:
+        return user.id in (match.home_user_id, match.away_user_id)
+    # Team match — membership of either squad counts.
+    from teams.models import TeamMember
+    team_ids = [tid for tid in (match.home_team_id, match.away_team_id) if tid]
+    if not team_ids:
+        return False
+    return TeamMember.objects.filter(
+        team_id__in=team_ids, user=user, is_active=True
+    ).exists()
+
+
+def _is_league_admin(league_id, user):
+    from leagues.models import LeagueMember
+    if user is None or not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return LeagueMember.objects.filter(
+        league_id=league_id,
+        user=user,
+        role__in=['LEAGUE_OWNER', 'LEAGUE_ADMIN'],
+        is_active=True,
+    ).exists()
+
+
 class EvidenceUploadView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -26,7 +64,9 @@ class EvidenceUploadView(generics.GenericAPIView):
         match = get_object_or_404(Match, id=match_id, league_id=league_id)
 
         user = request.user
-        if user != match.home_user and user != match.away_user:
+        # Participants of user matches AND team matches may upload; league
+        # admins may always upload on a participant's behalf.
+        if not (_is_match_participant(match, user) or _is_league_admin(league_id, user)):
             return Response(
                 {'error': 'You are not a participant of this match.'},
                 status=status.HTTP_403_FORBIDDEN
@@ -88,18 +128,8 @@ class EvidenceFileView(generics.GenericAPIView):
             match__league_id=league_id,
         )
 
-        participant = (
-            request.user == evidence.match.home_user
-            or request.user == evidence.match.away_user
-            or request.user.is_superuser
-        )
-        from leagues.models import LeagueMember
-        admin = LeagueMember.objects.filter(
-            league_id=league_id,
-            user=request.user,
-            role__in=['LEAGUE_OWNER', 'LEAGUE_ADMIN'],
-            is_active=True,
-        ).exists()
+        participant = _is_match_participant(evidence.match, request.user)
+        admin = _is_league_admin(league_id, request.user)
         if not (participant or admin):
             return Response(
                 {'error': 'You are not allowed to view this evidence.'},
